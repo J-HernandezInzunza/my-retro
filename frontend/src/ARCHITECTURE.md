@@ -32,7 +32,9 @@ src/
 ## Slice Architecture Principles
 
 ### 1. Self-Contained Slices
+
 Each slice contains everything needed for its user capability:
+
 - Components (Vue components)
 - Services (API calls, business logic)
 - Types (TypeScript definitions)
@@ -40,6 +42,7 @@ Each slice contains everything needed for its user capability:
 - Tests (unit and integration tests)
 
 ### 2. Minimal Cross-Slice Dependencies
+
 - Slices should not directly import from other slices
 - Shared functionality goes in the `shared/` directory
 - Communication between slices happens through:
@@ -48,7 +51,9 @@ Each slice contains everything needed for its user capability:
   - URL routing
 
 ### 3. Feature-Oriented Organization
+
 Each slice represents a complete user journey or capability:
+
 - **user-onboarding**: Getting users into sessions
 - **team-creation**: Setting up teams and configurations
 - **retro-facilitation**: Running and managing retrospectives
@@ -78,13 +83,16 @@ The architecture supports multiple retrospective formats through a component-bas
 ## Development Guidelines
 
 ### 1. Creating New Features
+
 1. Identify which slice the feature belongs to
 2. If it's a new capability, create a new slice
 3. Implement all related code within the slice
 4. Extract shared functionality to `shared/` if needed
 
 ### 2. Slice Structure
+
 Each slice should follow this internal structure:
+
 ```
 slice-name/
 ├── index.ts              # Public API exports
@@ -97,6 +105,7 @@ slice-name/
 ```
 
 ### 3. Import Rules
+
 - ✅ Slice can import from `shared/`
 - ✅ Slice can import from `app/`
 - ❌ Slice cannot import from other slices
@@ -104,6 +113,7 @@ slice-name/
 - ❌ `shared/` cannot import from slices
 
 ### 4. State Management
+
 - Global state for cross-slice communication
 - Local state within slices for slice-specific data
 - Use composables for state logic within slices

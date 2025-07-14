@@ -4,5 +4,5 @@
 // Placeholder exports - will be implemented in future phases
 export const actionTrackingSlice = {
   name: 'action-tracking',
-  description: 'Handles action item creation, assignment, and follow-up'
+  description: 'Handles action item creation, assignment, and follow-up',
 }
