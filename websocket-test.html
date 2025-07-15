@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Test</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input { margin-right: 10px; }
+  </style>
+</head>
+<body>
+
+  <h1>WebSocket Connection Test</h1>
+  <p>Open your browser's developer console (Cmd+Opt+I or Ctrl+Shift+I) to see connection logs.</p>
+  <p>Check your backend terminal to see the "A user connected" message.</p>
+
+  <div id="chat">
+    <input id="m" autocomplete="off" /><button onclick="sendMessage()">Send Message</button>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const socket = io('http://localhost:3001');
+
+    socket.on('connect', () => {
+      console.log('✅ Successfully connected to WebSocket server!');
+      console.log('Socket ID:', socket.id);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('❌ Connection failed:', err.message);
+    });
+
+    // Listen for broadcasted messages from the server
+    socket.on('chat message', (msg) => {
+      console.log('Received broadcast:', msg);
+    });
+
+    function sendMessage() {
+      const input = document.getElementById('m');
+      const message = input.value;
+      if (message) {
+        socket.emit('chat message', message);
+        console.log('Sent message:', message);
+        input.value = '';
+      }
+    }
+  </script>
+
+</body>
+</html>

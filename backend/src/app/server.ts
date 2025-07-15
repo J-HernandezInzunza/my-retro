@@ -1,33 +1,29 @@
 import express from 'express';
 import cors from 'cors';
-import { PrismaClient } from '../generated/prisma';
+import { createServer } from 'http';
 
-const prisma = new PrismaClient();
+import { initSocketServer } from './core/socket';
+import apiRoutes from './routes/api';
+
+// --- Server Initialization ---
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors({ origin: 'http://localhost:3000' })); // Allow requests from frontend
-app.use(express.json()); // Parse JSON bodies
+// --- Middleware Setup ---
+app.use(cors());
+app.use(express.json());
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
+// --- API Routes ---
+app.use('/api', apiRoutes);
 
-// Test endpoint to get all users
-app.get('/api/users', async (req, res) => {
-  try {
-    const users = await prisma.user.findMany();
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch users' });
-  }
-});
+// --- Socket.io Initialization ---
+initSocketServer(httpServer);
 
-// Start the server
-app.listen(PORT, () => {
+// --- Server Startup ---
+httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
 
 export default app;
