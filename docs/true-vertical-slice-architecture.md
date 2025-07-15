@@ -36,14 +36,15 @@ This requires a **completely flexible data model** and **format-agnostic archite
 
 ### Frontend Structure
 
-```
+```text
 frontend/src/
 ├── slices/
 │   ├── user-onboarding/              # "I want to join a retrospective"
 │   │   ├── ui/
-│   │   │   ├── IdentifyView.vue
-│   │   │   ├── JoinSessionView.vue
-│   │   │   └── components/
+│   │   │   ├── components/
+│   │   │   └── views/
+│   │   │       ├── IdentifyView.vue
+│   │   │       └── JoinSessionView.vue
 │   │   ├── business/
 │   │   │   ├── onboardingService.ts
 │   │   │   └── sessionValidator.ts
@@ -57,9 +58,10 @@ frontend/src/
 │   │
 │   ├── team-creation/                # "I want to create and manage a team"
 │   │   ├── ui/
-│   │   │   ├── CreateTeamView.vue
-│   │   │   ├── ManageTeamView.vue
-│   │   │   └── components/
+│   │   │   ├── components/
+│   │   │   └── views/
+│   │   │       ├── CreateTeamView.vue
+│   │   │       └── ManageTeamView.vue
 │   │   ├── business/
 │   │   │   ├── teamService.ts
 │   │   │   └── membershipService.ts
@@ -72,12 +74,13 @@ frontend/src/
 │   │
 │   ├── retro-facilitation/           # "I want to facilitate a retrospective"
 │   │   ├── ui/
-│   │   │   ├── CreateRetroView.vue
-│   │   │   ├── FacilitatorDashboard.vue
-│   │   │   ├── FormatSelector.vue
-│   │   │   └── components/
-│   │   │       ├── PhaseControls.vue
-│   │   │       └── SessionSettings.vue
+│   │   │   ├── components/
+│   │   │   │   ├── PhaseControls.vue
+│   │   │   │   └── SessionSettings.vue
+│   │   │   └── views/
+│   │   │       ├── CreateRetroView.vue
+│   │   │       ├── FacilitatorDashboard.vue
+│   │   │       └── FormatSelector.vue
 │   │   ├── business/
 │   │   │   ├── facilitationService.ts
 │   │   │   ├── formatRegistry.ts
@@ -92,16 +95,17 @@ frontend/src/
 │   │
 │   ├── retro-participation/          # "I want to participate in a retrospective"
 │   │   ├── ui/
-│   │   │   ├── ParticipantView.vue
 │   │   │   ├── RetroCanvas.vue       # Format-agnostic canvas
-│   │   │   └── components/
-│   │   │       ├── ItemCreator.vue
-│   │   │       ├── VotingInterface.vue
-│   │   │       └── format-renderers/
-│   │   │           ├── ColumnRenderer.vue
-│   │   │           ├── TimelineRenderer.vue
-│   │   │           ├── CanvasRenderer.vue
-│   │   │           └── FormRenderer.vue
+│   │   │   ├── components/
+│   │   │   │   ├── ItemCreator.vue
+│   │   │   │   ├── VotingInterface.vue
+│   │   │   │    └── format-renderers/
+│   │   │   │        ├── ColumnRenderer.vue
+│   │   │   │        ├── TimelineRenderer.vue
+│   │   │   │        ├── CanvasRenderer.vue
+│   │   │   │        └── FormRenderer.vue
+│   │   │   └── views/
+│   │   │       └── ParticipantView.vue # Format-agnostic canvas
 │   │   ├── business/
 │   │   │   ├── participationService.ts
 │   │   │   ├── itemService.ts
@@ -117,9 +121,10 @@ frontend/src/
 │   │
 │   ├── action-tracking/              # "I want to track action items"
 │   │   ├── ui/
-│   │   │   ├── ActionItemsView.vue
-│   │   │   ├── CreateActionView.vue
-│   │   │   └── components/
+│   │   │   ├── components/
+│   │   │   └── views/
+│   │   │       ├── ActionItemsView.vue
+│   │   │       └── CreateActionView.vue
 │   │   ├── business/
 │   │   │   ├── actionService.ts
 │   │   │   └── trackingService.ts
@@ -132,9 +137,10 @@ frontend/src/
 │   │
 │   ├── retro-export/                 # "I want to export retrospective results"
 │   │   ├── ui/
-│   │   │   ├── ExportView.vue
-│   │   │   ├── PreviewModal.vue
-│   │   │   └── components/
+│   │   │   ├── components/
+│   │   │   │   └── PreviewModal.vue
+│   │   │   └── views/
+│   │   │       └── ExportView.vue
 │   │   ├── business/
 │   │   │   ├── exportService.ts
 │   │   │   ├── formatters/
@@ -183,7 +189,7 @@ frontend/src/
 
 ### Backend Structure
 
-```
+```text
 backend/src/
 ├── slices/
 │   ├── user-onboarding/              # "I want to join a retrospective"
@@ -397,177 +403,59 @@ INSERT INTO retro_formats (name, slug, layout_config, interaction_config) VALUES
 Each slice that needs to display retro content uses a **simple Vue component-based renderer system**:
 
 ```vue
-<!-- In retro-participation/ui/RetroCanvas.vue -->
+<!-- In a view like retro-participation/ui/views/ParticipantView.vue -->
 <template>
-  <div class="retro-canvas">
-    <!-- Dynamic component based on format type -->
-    <component 
-      :is="formatComponent" 
-      :items="items" 
-      :format="format" 
-      :config="config"
-      @item-created="handleItemCreated"
-      @item-moved="handleItemMoved"
-      @item-voted="handleItemVoted"
+  <div class="participant-view">
+    <RetroRenderer
+      v-if="session"
+      :session="session"
+      :readonly="readonly"
+      @item-add="handleItemAdd"
+      @item-update="handleItemUpdate"
+      @item-delete="handleItemDelete"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import ColumnLayout from './components/format-renderers/ColumnLayout.vue';
-import TimelineLayout from './components/format-renderers/TimelineLayout.vue';
-import CanvasLayout from './components/format-renderers/CanvasLayout.vue';
-import FormLayout from './components/format-renderers/FormLayout.vue';
+import { ref } from 'vue';
+import RetroRenderer from '@/slices/retro-participation/ui/components/format-renderers/RetroRenderer.vue';
+import type { RetroSession } from '@/slices/retro-participation/types/renderer';
 
-const props = defineProps<{
-  items: RetroItem[];
-  format: RetroFormat;
-  config: RenderConfig;
-}>();
+const session = ref<RetroSession | null>(null);
+const readonly = ref(false);
 
-// Simple component mapping based on format type
-const formatComponents = {
-  'columns': ColumnLayout,
-  'timeline': TimelineLayout,
-  'canvas': CanvasLayout,
-  'form': FormLayout,
-};
-
-const formatComponent = computed(() => {
-  const formatType = props.format.layout_config.type;
-  return formatComponents[formatType] || ColumnLayout; // fallback
-});
-
-const handleItemCreated = (item: RetroItem) => {
-  // Handle item creation
-};
-
-const handleItemMoved = (itemId: string, newPosition: any) => {
-  // Handle item movement
-};
-
-const handleItemVoted = (itemId: string, vote: Vote) => {
-  // Handle voting
-};
+// Event handlers for interactivity
+const handleItemAdd = (item) => { /* ... */ };
+const handleItemUpdate = (itemId, updates) => { /* ... */ };
+const handleItemDelete = (itemId) => { /* ... */ };
 </script>
 ```
 
-```vue
-<!-- Example: ColumnLayout.vue -->
-<template>
-  <div class="column-layout">
-    <div 
-      v-for="column in format.layout_config.columns" 
-      :key="column.id"
-      class="retro-column"
-      :style="{ backgroundColor: column.color }"
-    >
-      <h3>{{ column.title }}</h3>
-      
-      <div class="column-items">
-        <RetroItem
-          v-for="item in getItemsForColumn(column.id)"
-          :key="item.id"
-          :item="item"
-          :config="config"
-          @voted="$emit('item-voted', item.id, $event)"
-        />
-      </div>
-      
-      <button 
-        @click="createItem(column.id)"
-        class="add-item-btn"
-      >
-        + Add Item
-      </button>
-    </div>
-  </div>
-</template>
+### How It Works
 
-<script setup lang="ts">
-const props = defineProps<{
-  items: RetroItem[];
-  format: RetroFormat;
-  config: RenderConfig;
-}>();
+1. **Format-Agnostic View**: A view (e.g., `ParticipantView.vue`) is responsible for fetching the `RetroSession` data.
+2. **Renderer Factory**: It passes the session data to `RetroRenderer.vue`.
+3. **Dynamic Component Loading**: `RetroRenderer.vue` acts as a factory. It reads the `session.format.layout_config.type` (e.g., 'columns', 'timeline') and dynamically loads the corresponding renderer component (e.g., `ColumnRenderer.vue`).
+4. **Props and Events**: The factory passes the session data down as props and listens for events (like `@item-add`) to handle user interactions.
 
-const emit = defineEmits<{
-  'item-created': [item: RetroItem];
-  'item-moved': [itemId: string, newPosition: any];
-  'item-voted': [itemId: string, vote: Vote];
-}>();
+This keeps the parent view clean and delegates all format-specific rendering logic to the appropriate component, making the system highly extensible.
 
-const getItemsForColumn = (columnId: string) => {
-  return props.items.filter(item => 
-    item.position_data.column_id === columnId
-  );
-};
+## Communication Between Slices
 
-const createItem = (columnId: string) => {
-  // Open modal or inline editor for item creation
-  // Emit item-created event when done
-};
-</script>
-```
+Slices should be as decoupled as possible. Communication can happen through:
 
-```vue
-<!-- Example: TimelineLayout.vue -->
-<template>
-  <div class="timeline-layout">
-    <div class="timeline-header">
-      <div class="time-markers">
-        <span 
-          v-for="marker in timeMarkers" 
-          :key="marker.id"
-          class="time-marker"
-        >
-          {{ marker.label }}
-        </span>
-      </div>
-    </div>
-    
-    <div 
-      v-for="lane in format.layout_config.lanes"
-      :key="lane.id" 
-      class="timeline-lane"
-    >
-      <h4>{{ lane.title }}</h4>
-      <div class="lane-items">
-        <RetroItem
-          v-for="item in getItemsForLane(lane.id)"
-          :key="item.id"
-          :item="item"
-          :config="config"
-          :style="getTimelinePosition(item)"
-          @voted="$emit('item-voted', item.id, $event)"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
-<script setup lang="ts">
-// Similar setup but for timeline-specific logic
-const getItemsForLane = (laneId: string) => {
-  return props.items.filter(item => 
-    item.position_data.lane_id === laneId
-  );
-};
-
-const getTimelinePosition = (item: RetroItem) => {
-  // Calculate position based on timestamp
-  const timePosition = item.position_data.time_position || 0;
-  return {
-    left: `${timePosition}%`
-  };
-};
-</script>
-```
+1. **Shared Services**: For common, stateless logic (e.g., an `apiClient` in `shared/utils`).
+2. **Global State (Pinia)**: For application-wide state like the current user or session ID.
+3. **Event Bus**: For cross-slice communication without direct dependencies.
 
 ## Backend Slice Implementation Details
 
+- **Backend Slices**: Mirror the frontend slices, handling business logic and data persistence for each user capability.
+- **Database**: The schema is designed for flexibility, using `JSONB` to store format-specific configurations and item data, avoiding rigid, column-based structures.
+
 ### 1. Complete API Ownership
+
 Each slice owns its complete API surface:
 
 ```typescript
@@ -584,6 +472,7 @@ participationRoutes.delete('/items/:id/vote', removeVote);
 ```
 
 ### 2. Independent Business Logic
+
 Each slice contains all its business rules:
 
 ```typescript
@@ -639,6 +528,7 @@ export class ItemService {
 ```
 
 ### 3. Format-Agnostic Data Layer
+
 Ultra-flexible repositories that work with any retro format:
 
 ```typescript
@@ -680,6 +570,7 @@ export class ItemRepository {
 ```
 
 ### 4. Event-Driven Slice Communication
+
 Slices communicate through domain events for loose coupling:
 
 ```typescript
@@ -721,6 +612,7 @@ eventBus.on('retro.item.created', (event) => {
 ```
 
 ### 5. Independent Deployment Capability
+
 Each slice could theoretically be deployed as a separate microservice:
 
 ```typescript
@@ -755,6 +647,7 @@ if (process.env.STANDALONE_MODE) {
 ## Slice Communication Patterns
 
 ### Frontend Communication
+
 ```typescript
 // Frontend slices communicate through:
 // 1. Pinia stores (minimal shared state)
@@ -768,6 +661,7 @@ eventBus.emit('phase.changed', { sessionId, newPhase });
 ```
 
 ### Backend Communication
+
 ```typescript
 // Backend slices communicate through:
 // 1. Domain events (EventEmitter)
@@ -792,6 +686,7 @@ eventBus.emit('retro.item.voted', {
 ## Format Flexibility Examples
 
 ### Adding a New "Mood Board" Format
+
 ```typescript
 // 1. Add format definition to database
 const moodBoardFormat = {

@@ -2,8 +2,12 @@
   <q-page class="flex flex-center">
     <div class="text-center">
       <div class="text-h2 text-primary q-mb-md">Welcome to My Retro</div>
-      <div class="text-h6 text-grey-7 q-mb-xl">
+      <div class="text-h6 text-grey-7">
         A modern retrospective tool for distributed teams
+      </div>
+
+      <div class="q-mt-md">
+        <AboutCard />
       </div>
 
       <div class="row q-gutter-md justify-center">
@@ -23,18 +27,13 @@
           @click="createSession"
         />
       </div>
-
-      <!-- Quasar Test Component for validation -->
-      <div class="q-mt-xl">
-        <QuasarTest />
-      </div>
     </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar'
-import QuasarTest from '../components/QuasarTest.vue'
+import AboutCard from './AboutCard.vue'
 
 const $q = useQuasar()
 

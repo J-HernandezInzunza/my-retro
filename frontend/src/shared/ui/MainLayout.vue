@@ -28,16 +28,6 @@
           </q-item-section>
         </q-item>
 
-        <q-item clickable v-ripple :to="{ name: 'about' }">
-          <q-item-section avatar>
-            <q-icon name="info" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>About</q-item-label>
-            <q-item-label caption>About My Retro</q-item-label>
-          </q-item-section>
-        </q-item>
-
         <q-separator />
 
         <q-item-label header> Retrospective </q-item-label>

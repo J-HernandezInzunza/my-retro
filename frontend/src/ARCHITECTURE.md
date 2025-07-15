@@ -8,25 +8,23 @@ This frontend follows a **True Vertical Slice Architecture** where features are 
 
 ```
 src/
-├── app/                    # Application core
-│   ├── main.ts            # Application entry point
-│   ├── router/            # Vue Router configuration
-│   └── store.ts           # Global state management
-├── slices/                # Feature slices (vertical slices)
-│   ├── user-onboarding/   # User identification & session joining
-│   ├── team-creation/     # Team setup & configuration
-│   ├── retro-facilitation/ # Facilitator controls & session management
+├── app/                     # Application core
+│   ├── main.ts              # Application entry point
+│   ├── router/              # Vue Router configuration
+│   └── store.ts             # Global state management
+├── assets/                  # Static assets
+├── slices/                  # Feature slices (vertical slices)
+│   ├── user-onboarding/     # User identification & session joining
+│   ├── team-creation/       # Team setup & configuration
+│   ├── retro-facilitation/  # Facilitator controls & session management
 │   ├── retro-participation/ # Participant interactions
-│   ├── action-tracking/   # Action item creation & follow-up
-│   ├── retro-export/      # Data export & reporting
+│   ├── action-tracking/     # Action item creation & follow-up
+│   ├── retro-export/        # Data export & reporting
 │   └── realtime-collaboration/ # Real-time updates & collaboration
-├── shared/                # Shared utilities & components
-│   ├── ui/               # Reusable UI components
-│   ├── utils/            # Utility functions
-│   └── types/            # TypeScript type definitions
-├── assets/               # Static assets
-├── components/           # Legacy components (to be migrated)
-└── views/               # Legacy views (to be migrated)
+└── shared/                  # Shared utilities & components
+    ├── ui/                  # Reusable UI components
+    ├── utils/               # Utility functions
+    └── types/               # TypeScript type definitions
 ```
 
 ## Slice Architecture Principles
