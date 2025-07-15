@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import { PrismaClient } from '../generated/prisma';
 
+const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -11,6 +13,16 @@ app.use(express.json()); // Parse JSON bodies
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
+});
+
+// Test endpoint to get all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
 });
 
 // Start the server
