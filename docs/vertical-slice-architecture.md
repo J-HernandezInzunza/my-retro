@@ -1,27 +1,8 @@
-# True Vertical Slice Architecture for Retrospective Tool
+# Vertical Slice Architecture: Implementation Guide
 
-## What is True Vertical Slice Architecture?
+This document provides detailed examples and patterns for implementing features using the Vertical Slice Architecture. It serves as the practical "how-to" guide for developers, complementing the high-level overview in `ARCHITECTURE.md`.
 
-A **true vertical slice** contains everything needed to deliver a complete user capability from UI to database. Each slice should be:
-
-1. **Independently deployable** - Can work without other slices
-2. **End-to-end complete** - Contains all layers (UI, business logic, data)
-3. **User-centric** - Organized around user capabilities, not technical concerns
-4. **Minimally coupled** - Shares as little as possible with other slices
-
-## Core Insight: Retrospectives Beyond Columns
-
-Future retrospectives might not follow column patterns at all. Consider these formats:
-
-- **Timeline retrospectives** (events on a timeline)
-- **Mood board retrospectives** (visual/image-based)
-- **Voting-only retrospectives** (just vote on pre-defined topics)
-- **Free-form retrospectives** (canvas-style with sticky notes anywhere)
-- **Structured questionnaires** (form-based with specific questions)
-
-This requires a **completely flexible data model** and **format-agnostic architecture**.
-
-## True Vertical Slices by User Capabilities
+## Slice Structure by User Capabilities
 
 ### Frontend Structure
 
