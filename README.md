@@ -4,18 +4,16 @@ A modern, in-house retrospective tool designed for distributed teams with hybrid
 
 ## Overview
 
-My Retro is a web-based application that enables teams to conduct effective retrospectives with both asynchronous item collection and real-time discussion phases. Built with modern technologies, it provides a seamless experience for team reflection and continuous improvement.
+My Retro is a web-based application that enables teams to conduct effective retrospectives with both asynchronous item collection and real-time discussion phases. Built with a **True Vertical Slice Architecture**, it provides a scalable and maintainable platform for team reflection and continuous improvement.
 
 ## Key Features
 
-- **4-Column Retrospective Layout**: What went well, What didn't go well, What have I learned, What still puzzles me
-- **Hybrid Workflow**: Async item collection + real-time discussion phases
-- **Real-time Collaboration**: Live updates and collaboration during discussion phase
-- **Voting System**: Upvote items to prioritize discussion topics
-- **Drag & Drop**: Move items between columns easily
-- **Action Items**: Track and manage follow-up actions
-- **Session Management**: Facilitator controls for phase transitions
-- **Export Functionality**: Export results to Markdown, JSON, CSV, and Confluence
+- **Format-Agnostic Renderers**: Supports multiple retrospective formats (columns, timeline, canvas, forms).
+- **Hybrid Workflow**: Async item collection + real-time discussion phases.
+- **Real-time Collaboration**: Live updates and collaboration during discussion phase.
+- **Voting System**: Upvote items to prioritize discussion topics.
+- **Action Items**: Track and manage follow-up actions.
+- **Session Management**: Facilitator controls for phase transitions.
 
 ## Technology Stack
 
@@ -24,6 +22,7 @@ My Retro is a web-based application that enables teams to conduct effective retr
 - **Real-time**: Socket.io
 - **Database**: PostgreSQL + Prisma ORM
 - **Build Tool**: Vite
+- **Package Manager**: `pnpm` (recommended)
 
 ## Project Management
 
@@ -33,71 +32,28 @@ This project is managed in Linear for task tracking and project coordination.
 
 ## Getting Started
 
-### Prerequisites
+To get started with development, please follow the **[Onboarding Guide](./docs/ONBOARDING.md)**. It contains all the necessary steps for environment setup, installation, and running the application.
 
-- Node.js 22+
-- PostgreSQL 14+
-- npm or yarn
+## Documentation
 
-### Development Setup
+All project documentation is located in the `docs/` directory.
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd my-retro
-   ```
-
-2. **Install dependencies**
-   ```bash
-   # Frontend
-   cd frontend
-   npm install
-   
-   # Backend
-   cd ../backend
-   npm install
-   ```
-
-3. **Set up database**
-   ```bash
-   cd backend
-   npx prisma migrate dev
-   npx prisma generate
-   ```
-
-4. **Start development servers**
-   ```bash
-   # Backend (Terminal 1)
-   cd backend
-   npm run dev
-   
-   # Frontend (Terminal 2)
-   cd frontend
-   npm run dev
-   ```
+- **[🚀 Onboarding Guide](./docs/ONBOARDING.md)**: A step-by-step guide to get your development environment set up and start contributing.
+- **[🏛️ Architecture Overview](./docs/ARCHITECTURE.md)**: An in-depth explanation of the True Vertical Slice Architecture and design principles.
 
 ## Project Structure
 
-```
+```text
 my-retro/
-├── frontend/          # Vue 3 + Quasar frontend
-├── backend/           # Node.js + Express backend
-├── docs/              # Architecture and planning documents
-│   ├── retro-tool-architecture.md
-│   ├── system-architecture-diagram.md
-│   └── true-vertical-slice-architecture.md
-├── TODO.md            # Development task tracking
-└── README.md          # This file
+├── docs/               # Project documentation
+│   ├── ARCHITECTURE.md
+│   └── ONBOARDING.md
+├── backend/            # Node.js + Express backend
+├── frontend/           # Vue 3 + Quasar frontend
+└── README.md           # This file
+└── TODO.md             # Work in progress
 ```
 
-## Development Progress
-
-See [`TODO.md`](./TODO.md) for detailed development progress and task tracking.
-
-## Architecture
-
-For detailed architecture information, see:
-- [Main Architecture Document](./docs/retro-tool-architecture.md)
 - [System Architecture Diagrams](./docs/system-architecture-diagram.md)
 - [Alternative Architecture Approach](./docs/true-vertical-slice-architecture.md)
 

@@ -1,39 +1,46 @@
-# frontend
+# My Retro - Frontend
 
-This template should help get you started developing with Vue 3 in Vite.
+This directory contains the frontend application for the My Retro project, built with Vue 3, TypeScript, and the Quasar framework.
 
-## Recommended IDE Setup
+## Quick Start
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+### 1. Install Dependencies
 
-## Type Support for `.vue` Imports in TS
+If you haven't already, install the project dependencies using `pnpm` (recommended) or `npm`.
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
+```bash
+pnpm install
 ```
 
-### Compile and Hot-Reload for Development
+### 2. Configure Environment
 
-```sh
-npm run dev
+Copy the example environment file and fill in any necessary variables.
+
+```bash
+cp .env.example .env
 ```
 
-### Type-Check, Compile and Minify for Production
+### 3. Run Development Server
 
-```sh
-npm run build
+Start the Vite development server with hot reload.
+
+```bash
+pnpm run dev
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+The application will be running on `http://localhost:3000` or the next available port.
 
-```sh
-npm run lint
-```
+## Available Scripts
+
+- `pnpm run dev`: Starts the development server.
+- `pnpm run build`: Compiles and bundles the application for production.
+- `pnpm run preview`: Serves the production build locally for testing.
+- `pnpm run lint`: Lints the codebase for errors.
+- `pnpm run format`: Formats the code using Prettier.
+
+## Detailed Documentation
+
+For a comprehensive understanding of the project architecture, development workflow, and more, please refer to the main documentation in the `docs` directory at the root of the project.
+
+- **[Onboarding Guide](../docs/ONBOARDING.md)**
+- **[Architecture Overview](../docs/ARCHITECTURE.md)**
