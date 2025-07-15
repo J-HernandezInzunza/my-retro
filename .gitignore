@@ -1,0 +1,11 @@
+# Environment variables
+# Ignore .env files in the root and any subdirectories
+.env
+**/.env
+
+# IDE / Editor specific
+.idea/
+.vscode/
+
+# Mac-specific
+.DS_Store

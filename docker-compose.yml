@@ -1,0 +1,22 @@
+# This file defines the services that make up your application stack.
+# In this case, we are starting with just the PostgreSQL database.
+# You can start this service by running `docker-compose up -d` in your terminal.
+
+services:
+  # This is the service definition for our PostgreSQL database.
+  postgres:
+    image: postgres:16
+    container_name: my-retro-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      # This ensures that your database data is persisted on your local machine.
+      - postgres_data:/var/lib/postgresql/data
+
+# This defines the named volume used by the postgres service.
+volumes:
+  postgres_data:
