@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar'
-import AboutCard from './AboutCard.vue'
+import AboutCard from '../components/AboutCard.vue'
 
 const $q = useQuasar()
 
