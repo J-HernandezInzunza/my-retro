@@ -4,12 +4,17 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/app/server.ts"
+    "dev": "ts-node-dev --respawn --transpile-only src/app/server.ts",
+    "seed": "npx prisma db seed"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
+  "prisma": {
+    "schema": "./prisma/schema.prisma",
+    "seed": "ts-node-dev ./prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.12.0",
     "cors": "^2.8.5",

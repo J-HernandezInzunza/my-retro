@@ -3,7 +3,7 @@
     "linear": {
       "command": "node",
       "args": [
-        "/Users/josehernandezinzunza/Projects/Jose/mcp-servers/linear-mcp/build/index.js"
+        "/path-to-linear-mcp/build/index.js"
       ],
       "env": {
         "LINEAR_API_KEY": ""
