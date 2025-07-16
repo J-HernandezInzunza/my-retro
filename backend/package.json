@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/app/server.ts",
-    "seed": "npx prisma db seed"
+    "seed": "npx prisma db seed",
+    "build": "npx prisma generate && tsc"
   },
   "keywords": [],
   "author": "",

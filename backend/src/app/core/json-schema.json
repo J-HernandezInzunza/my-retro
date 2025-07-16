@@ -96,7 +96,12 @@
         },
         "status": {
           "type": "string",
-          "default": "active"
+          "default": "ACTIVE",
+          "enum": [
+            "ACTIVE",
+            "COMPLETED",
+            "ARCHIVED"
+          ]
         },
         "createdAt": {
           "type": "string",

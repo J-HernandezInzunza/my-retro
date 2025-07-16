@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import {
-  createRetroSession,
   getRetroFormats,
+  createRetroSession,
   createRetroItem,
   getRetroItemsForSession,
   getRetroSession,
+  updateRetroItem,
+  deleteRetroItem,
+  updateRetroSession,
+  deleteRetroSession,
 } from './retrospective-board.controller';
 
 const router = Router();
@@ -35,8 +39,9 @@ router.get('/formats', getRetroFormats);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [teamId, formatId]
+ *             required: [name, teamId, formatId]
  *             properties:
+ *               name: { type: 'string', description: 'The name of the retrospective session.' }
  *               teamId: { type: 'string', description: 'The ID of the team.' }
  *               formatId: { type: 'string', description: 'The ID of the retrospective format.' }
  *     responses:
@@ -50,6 +55,75 @@ router.get('/formats', getRetroFormats);
  *         description: The specified team or format was not found.
  */
 router.post('/session', createRetroSession);
+
+/**
+ * @openapi
+ * /api/retrospective/session/{sessionId}:
+ *   patch:
+ *     tags:
+ *       - Retrospective Board
+ *     summary: Update a retrospective session
+ *     description: Updates the name or status of an existing retrospective session.
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the retrospective session to update.
+ *     requestBody:
+ *       description: The fields to update on the session. All fields are optional.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The new name for the session.
+ *               status:
+ *                 type: string
+ *                 description: The new status for the session.
+ *                 enum: [ACTIVE, COMPLETED, ARCHIVED]
+ *     responses:
+ *       '200':
+ *         description: The session was updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RetroSession'
+ *       '404':
+ *         description: The session with the specified ID was not found.
+ *       '500':
+ *         description: Internal Server Error.
+ */
+router.patch('/session/:sessionId', updateRetroSession);
+
+/**
+ * @openapi
+ * /api/retrospective/session/{sessionId}:
+ *   delete:
+ *     tags:
+ *       - Retrospective Board
+ *     summary: Delete a retrospective session
+ *     description: Permanently removes a retrospective session and all of its associated items from the database.
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the retrospective session to delete.
+ *     responses:
+ *       '204':
+ *         description: The session and its items were deleted successfully.
+ *       '404':
+ *         description: The session with the specified ID was not found.
+ *       '500':
+ *         description: Internal Server Error.
+ */
+router.delete('/session/:sessionId', deleteRetroSession);
 
 /**
  * @openapi
@@ -134,5 +208,78 @@ router.get('/session/:sessionId', getRetroSession);
  *         description: The specified author or session was not found.
  */
 router.post('/item', createRetroItem);
+
+/**
+ * @openapi
+ * /api/retrospective/item/{itemId}:
+ *   patch:
+ *     tags:
+ *       - Retrospective Board
+ *     summary: Update a retrospective item
+ *     description: Updates the content, position, or metadata of an existing retrospective item.
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the retrospective item to update.
+ *     requestBody:
+ *       description: The fields to update on the retrospective item. All fields are optional.
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 description: The new text content of the item.
+ *               positionData:
+ *                 type: object
+ *                 description: The new position data for rendering the item.
+ *                 additionalProperties: true
+ *               metadata:
+ *                 type: object
+ *                 description: Any other metadata for the item.
+ *                 additionalProperties: true
+ *     responses:
+ *       '200':
+ *         description: The retrospective item was updated successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RetroItem'
+ *       '404':
+ *         description: The retrospective item with the specified ID was not found.
+ *       '500':
+ *         description: Internal Server Error.
+ */
+router.patch('/item/:itemId', updateRetroItem);
+
+/**
+ * @openapi
+ * /api/retrospective/item/{itemId}:
+ *   delete:
+ *     tags:
+ *       - Retrospective Board
+ *     summary: Delete a retrospective item
+ *     description: Permanently removes a retrospective item from the database.
+ *     parameters:
+ *       - in: path
+ *         name: itemId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the retrospective item to delete.
+ *     responses:
+ *       '204':
+ *         description: The retrospective item was deleted successfully.
+ *       '404':
+ *         description: The retrospective item with the specified ID was not found.
+ *       '500':
+ *         description: Internal Server Error.
+ */
+router.delete('/item/:itemId', deleteRetroItem);
 
 export default router;

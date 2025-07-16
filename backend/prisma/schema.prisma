@@ -43,21 +43,26 @@ model User {
   actionItems ActionItem[] @relation("AssignedActionItems")
 }
 
+enum RetroSessionStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
 model RetroSession {
-  id          String   @id @default(cuid())
-  name        String
-  status      String   @default("active") // e.g., active, completed, archived
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String             @id @default(cuid())
+  name           String
+  status         RetroSessionStatus @default(ACTIVE)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
-  team        Team   @relation(fields: [teamId], references: [id])
-  teamId      String
+  team           Team               @relation(fields: [teamId], references: [id])
+  teamId         String
 
-  format      RetroFormat @relation(fields: [formatId], references: [id])
-  formatId    String
-
-  items       RetroItem[]
-  actionItems ActionItem[]
+  formatId       String
+  format         RetroFormat        @relation(fields: [formatId], references: [id])
+  items          RetroItem[]
+  actionItems    ActionItem[]
 }
 
 model RetroItem {
