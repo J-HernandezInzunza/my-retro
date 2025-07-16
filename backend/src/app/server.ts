@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
+import swaggerUi from 'swagger-ui-express';
 
 import { initSocketServer } from './core/socket';
+import swaggerSpec from './core/swagger';
 import coreRoutes from './routes/api';
 import sliceRoutes from '../slices';
 
@@ -14,6 +16,9 @@ const PORT = process.env.PORT || 3001;
 // --- Middleware Setup ---
 app.use(cors());
 app.use(express.json());
+
+// --- API Documentation Route ---
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // --- API Routes ---
 app.use('/api', coreRoutes);
