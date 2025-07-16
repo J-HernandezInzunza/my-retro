@@ -3,7 +3,8 @@ import cors from 'cors';
 import { createServer } from 'http';
 
 import { initSocketServer } from './core/socket';
-import apiRoutes from './routes/api';
+import coreRoutes from './routes/api';
+import sliceRoutes from '../slices';
 
 // --- Server Initialization ---
 const app = express();
@@ -15,7 +16,8 @@ app.use(cors());
 app.use(express.json());
 
 // --- API Routes ---
-app.use('/api', apiRoutes);
+app.use('/api', coreRoutes);
+app.use('/api', sliceRoutes);
 
 // --- Socket.io Initialization ---
 initSocketServer(httpServer);
