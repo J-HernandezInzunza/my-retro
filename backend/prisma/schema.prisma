@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema for the My Retro application
+// Designed for flexibility to support any retrospective format.
 
 generator client {
   provider = "prisma-client-js"
@@ -14,10 +11,109 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid())
-  name      String
+// --- Core Models ---
 
+model Team {
+  id        String   @id @default(cuid())
+  name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  users     User[]
+  sessions  RetroSession[]
+}
+
+model User {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique // To identify users across browser sessions
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team        Team?   @relation(fields: [teamId], references: [id])
+  teamId      String?
+
+  retroItems  RetroItem[]
+  votes       Vote[]
+  actionItems ActionItem[] @relation("AssignedActionItems")
+}
+
+model RetroSession {
+  id          String   @id @default(cuid())
+  name        String
+  status      String   @default("active") // e.g., active, completed, archived
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team        Team   @relation(fields: [teamId], references: [id])
+  teamId      String
+
+  format      RetroFormat @relation(fields: [formatId], references: [id])
+  formatId    String
+
+  items       RetroItem[]
+  actionItems ActionItem[]
+}
+
+model RetroItem {
+  id           String   @id @default(cuid())
+  content      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Flexible data for positioning and metadata to support any format
+  positionData Json @default("{}") // e.g., { "x": 100, "y": 200 } or { "column": "start", "order": 1 }
+  metadata     Json @default("{}") // e.g., { "color": "blue" }
+
+  author       User   @relation(fields: [authorId], references: [id])
+  authorId     String
+
+  session      RetroSession @relation(fields: [sessionId], references: [id])
+  sessionId    String
+
+  votes        Vote[]
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+
+  item      RetroItem @relation(fields: [itemId], references: [id])
+  itemId    String
+
+  @@unique([userId, itemId]) // A user can only vote once per item
+}
+
+model ActionItem {
+  id           String   @id @default(cuid())
+  description  String
+  isCompleted  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  session      RetroSession @relation(fields: [sessionId], references: [id])
+  sessionId    String
+
+  assignedTo   User?   @relation("AssignedActionItems", fields: [assignedToId], references: [id])
+  assignedToId String?
+}
+
+// --- Format Definition Model ---
+
+// Defines the structure and rules for a type of retrospective.
+model RetroFormat {
+  id                String   @id @default(cuid())
+  name              String   // e.g., "Start, Stop, Continue"
+  slug              String   @unique // e.g., "start-stop-continue"
+  description       String?
+  layoutConfig      Json     // Defines visual arrangement (e.g., columns, canvas areas)
+  interactionConfig Json     // Defines user actions (e.g., voting enabled, card colors)
+  validationRules   Json     @default("{}") // Rules for item placement or content
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  sessions          RetroSession[]
 }
