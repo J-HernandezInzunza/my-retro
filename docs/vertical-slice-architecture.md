@@ -159,9 +159,22 @@ frontend/src/
 
 ### Backend Structure
 
+The backend is structured to separate the core application infrastructure from the feature-specific business logic. This creates a clean foundation that is ready for extension with a Vertical Slice Architecture.
+
 ```text
 backend/src/
-├── slices/
+├── app/
+│   ├── core/                           # Core, cross-cutting services (singletons)
+│   │   ├── prisma.ts                   # Instantiates and exports the Prisma client
+│   │   └── socket.ts                   # Initializes and configures the Socket.io server
+│   │
+│   ├── routes/                         # API route definitions
+│   │   └── api.ts                      # Mounts all API endpoints (e.g., /api/users, /api/health)
+│   │
+│   └── server.ts                       # Main application entry point: initializes Express, binds middleware, starts the server
+│
+├── slices/                             # (Future) Location for Vertical Slices
+│   │
 │   ├── user-onboarding/              # "I want to join a retrospective"
 │   │   ├── api/
 │   │   │   ├── routes.ts             # POST /api/users/session, PUT /api/users/session/name
@@ -264,17 +277,24 @@ backend/src/
 │   │   ├── errorHandler.ts           # Global error handling
 │   │   └── validation.ts             # Request validation utilities
 │   ├── utils/
-│   │   ├── database.ts               # Prisma client setup
 │   │   ├── logger.ts                 # Logging utilities
 │   │   └── constants.ts              # Shared constants
 │   └── types/
 │       └── common.types.ts           # Shared type definitions
-│
-└── app/                              # Application bootstrap
-    ├── server.ts                     # Express app setup
-    ├── routes.ts                     # Route registration
-    └── socket.ts                     # Socket.io setup
+└── generated/
+    └── prisma/                       # Auto-generated Prisma client based on schema.prisma
 ```
+
+**Architectural Approach:**
+
+- **`app/` Directory:** This contains the foundational infrastructure of the server.
+  - **`core/`:** Holds shared, singleton services like the database client (`prisma.ts`) and the WebSocket server (`socket.ts`). This ensures that essential services are initialized once and reused across the application.
+  - **`routes/`:** Defines the main API routing structure. It imports and uses routers from the different feature slices.
+  - **`server.ts`:** The application's entry point. It is responsible for setting up the Express server, applying global middleware (like CORS and JSON parsing), initializing Socket.io, mounting the API routes, and starting the server.
+
+- **`slices/` Directory:** This is where the Vertical Slice Architecture comes to life. Each subdirectory within `slices/` represents a distinct business capability (e.g., `user-onboarding`, `retro-facilitation`).
+  - **Self-Contained:** Each slice contains all the code it needs to function: its API controllers, business logic (services), and specific routes. It communicates with the rest of the application through the core services and the main router.
+  - **Low Coupling:** This structure minimizes dependencies between features, making the codebase easier to understand, maintain, and scale. Changes to one feature are less likely to break another.
 
 ## Ultra-Flexible Data Model
 
