@@ -5,9 +5,12 @@ import swaggerUi from 'swagger-ui-express';
 
 import { initSocketServer } from './core/socket';
 import swaggerSpec from './core/swagger';
-import coreRoutes from './routes/api';
-import userManagementRoutes from '../slices/user-management/user-management.routes';
-import retrospectiveBoardRoutes from '../slices/retrospective-board/retrospective-board.routes';
+import healthcheckRouter from './health.routes';
+
+import userManagementRouter from '../slices/user-management/user-management.routes';
+import retrospectiveBoardRouter from '../slices/retrospective-board/retrospective-board.routes';
+import userSessionRouter from '../slices/user-session/api/user-session.routes';
+import userSessionMiddleware from '../slices/user-session/api/user-session.middleware';
 
 // --- Server Initialization ---
 const app = express();
@@ -18,13 +21,15 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// --- API Documentation Route ---
+// --- API Documentation + Health Check Routes ---
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api-health', healthcheckRouter);
 
 // --- API Routes ---
-app.use('/api', coreRoutes);
-app.use('/api/users', userManagementRoutes);
-app.use('/api/retrospective', retrospectiveBoardRoutes);
+app.use(userSessionMiddleware()); 
+app.use('/api/user-session', userSessionRouter);
+app.use('/api/users', userManagementRouter);
+app.use('/api/retrospective', retrospectiveBoardRouter);
 
 // --- Socket.io Initialization ---
 initSocketServer(httpServer);
