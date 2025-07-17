@@ -13,8 +13,8 @@ Building an in-house retrospective tool for distributed teams with hybrid workfl
 ### Phase 1: Foundation & Setup (4/4 completed)
 
 - [x] **Task 1**: Set up project structure with Vue 3 + Vite + Quasar frontend
-- [ ] **Task 2**: Set up Node.js + Express + Socket.io + PostgreSQL backend
-- [ ] **Task 3**: Design database schema for teams, users, retro sessions, items, votes, and action items
+- [x] **Task 2**: Set up Node.js + Express + Socket.io + PostgreSQL backend
+- [x] **Task 3**: Design database schema for teams, users, retro sessions, items, votes, and action items
 - [ ] **Task 4**: Create user identification system (session-based, no auth)
 
 ### Phase 2: Core Team & Session Management (0/3 completed)
@@ -25,9 +25,9 @@ Building an in-house retrospective tool for distributed teams with hybrid workfl
 
 ### Phase 3: Main Retro Interface (0/4 completed)
 
-- [ ] **Task 8**: Build the main retro dashboard with 4 columns layout
+- [x] **Task 8**: Build the main retro dashboard with 4 columns layout
 - [ ] **Task 9**: Implement retro item creation with modal interface
-- [ ] **Task 10**: Add drag-and-drop functionality between columns
+- [x] **Task 10**: Add drag-and-drop functionality between columns
 - [ ] **Task 11**: Build voting/upvoting system for retro items
 
 ### Phase 4: Real-time Collaboration (0/3 completed)

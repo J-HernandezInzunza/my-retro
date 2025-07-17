@@ -14,7 +14,7 @@
     </q-header>
 
     <!-- Left Drawer / Sidebar -->
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-grey-1">
+    <q-drawer v-model="leftDrawerOpen" bordered class="bg-grey-1">
       <q-list>
         <q-item-label header> Navigation </q-item-label>
 

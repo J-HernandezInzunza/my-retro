@@ -28,15 +28,30 @@ model Team {
   sessions  RetroSession[]
 }
 
+model UserSession {
+  id          String   @id
+  displayName String   @default("Anonymous User")
+  createdAt   DateTime @default(now())
+  lastActive  DateTime @default(now())
+  teamId      String?
+
+  // Optional relationship to User if/when they create a full account
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?  @unique
+}
+
 model User {
   id          String   @id @default(cuid())
-  sessionId   String   @unique // To identify users across browser sessions
+  sessionId   String?  // Making this optional since we're moving to UserSession model
   displayName String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  team        Team?   @relation(fields: [teamId], references: [id])
+  team        Team?    @relation(fields: [teamId], references: [id])
   teamId      String?
+
+  // Relation to user session
+  userSession UserSession?
 
   retroItems  RetroItem[]
   votes       Vote[]

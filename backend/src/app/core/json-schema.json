@@ -32,6 +32,42 @@
         }
       }
     },
+    "UserSession": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string",
+          "default": "Anonymous User"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastActive": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "teamId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "user": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/User"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
     "User": {
       "type": "object",
       "properties": {
@@ -39,7 +75,10 @@
           "type": "string"
         },
         "sessionId": {
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "displayName": {
           "type": [
@@ -59,6 +98,16 @@
           "anyOf": [
             {
               "$ref": "#/definitions/Team"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "userSession": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/UserSession"
             },
             {
               "type": "null"
@@ -305,6 +354,9 @@
   "properties": {
     "team": {
       "$ref": "#/definitions/Team"
+    },
+    "userSession": {
+      "$ref": "#/definitions/UserSession"
     },
     "user": {
       "$ref": "#/definitions/User"
