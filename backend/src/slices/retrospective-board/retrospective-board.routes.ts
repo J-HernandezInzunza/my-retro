@@ -10,6 +10,7 @@ import {
   updateRetroSession,
   deleteRetroSession,
 } from './retrospective-board.controller';
+import { requireSession, optionalSession } from '../../app/session-validation.middleware';
 
 const router = Router();
 
@@ -24,6 +25,7 @@ const router = Router();
  *       200:
  *         description: A list of retrospective formats.
  */
+// Public route - no session required
 router.get('/formats', getRetroFormats);
 
 /**
@@ -54,7 +56,8 @@ router.get('/formats', getRetroFormats);
  *       404:
  *         description: The specified team or format was not found.
  */
-router.post('/session', createRetroSession);
+// Requires active session to create retro session
+router.post('/session', requireSession, createRetroSession);
 
 /**
  * @openapi
@@ -98,7 +101,8 @@ router.post('/session', createRetroSession);
  *       '500':
  *         description: Internal Server Error.
  */
-router.patch('/session/:sessionId', updateRetroSession);
+// Requires active session to update retro session
+router.patch('/session/:sessionId', requireSession, updateRetroSession);
 
 /**
  * @openapi
@@ -123,7 +127,8 @@ router.patch('/session/:sessionId', updateRetroSession);
  *       '500':
  *         description: Internal Server Error.
  */
-router.delete('/session/:sessionId', deleteRetroSession);
+// Requires active session to delete retro session
+router.delete('/session/:sessionId', requireSession, deleteRetroSession);
 
 /**
  * @openapi
@@ -149,7 +154,8 @@ router.delete('/session/:sessionId', deleteRetroSession);
  *               items:
  *                 $ref: '#/components/schemas/RetroItem'
  */
-router.get('/session/:sessionId/items', getRetroItemsForSession);
+// Optional session - can view items with or without session
+router.get('/session/:sessionId/items', optionalSession, getRetroItemsForSession);
 
 /**
  * @openapi
@@ -175,7 +181,8 @@ router.get('/session/:sessionId/items', getRetroItemsForSession);
  *       404:
  *         description: Session not found.
  */
-router.get('/session/:sessionId', getRetroSession);
+// Optional session - can view session details with or without session
+router.get('/session/:sessionId', optionalSession, getRetroSession);
 
 /**
  * @openapi
@@ -207,7 +214,8 @@ router.get('/session/:sessionId', getRetroSession);
  *       404:
  *         description: The specified author or session was not found.
  */
-router.post('/item', createRetroItem);
+// Requires active session to create retro items
+router.post('/item', requireSession, createRetroItem);
 
 /**
  * @openapi
@@ -255,7 +263,8 @@ router.post('/item', createRetroItem);
  *       '500':
  *         description: Internal Server Error.
  */
-router.patch('/item/:itemId', updateRetroItem);
+// Requires active session to update retro items
+router.patch('/item/:itemId', requireSession, updateRetroItem);
 
 /**
  * @openapi
@@ -280,6 +289,7 @@ router.patch('/item/:itemId', updateRetroItem);
  *       '500':
  *         description: Internal Server Error.
  */
-router.delete('/item/:itemId', deleteRetroItem);
+// Requires active session to delete retro items
+router.delete('/item/:itemId', requireSession, deleteRetroItem);
 
 export default router;
