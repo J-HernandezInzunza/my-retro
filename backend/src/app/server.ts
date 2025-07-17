@@ -3,7 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import swaggerUi from 'swagger-ui-express';
 
-import { initSocketServer } from './core/socket';
+import { createSocketServer, handleSocketConnection } from './core/socket';
 import swaggerSpec from './core/swagger';
 import healthcheckRouter from './health.routes';
 
@@ -11,7 +11,8 @@ import userManagementRouter from '../slices/user-management/user-management.rout
 import retrospectiveBoardRouter from '../slices/retrospective-board/retrospective-board.routes';
 import userSessionRouter from '../slices/user-session/api/user-session.routes';
 import userSessionMiddleware from '../slices/user-session/api/user-session.middleware';
-import SessionCleanupScheduler from '../slices/user-session/business/user-session-cleanup.scheduler';
+import userSessionSocketMiddleware from '../slices/user-session/api/user-session-socket.middleware';
+import UserSessionCleanupScheduler from '../slices/user-session/business/user-session-cleanup.scheduler';
 
 // --- Server Initialization ---
 const app = express();
@@ -33,11 +34,14 @@ app.use('/api/users', userManagementRouter);
 app.use('/api/retrospective', retrospectiveBoardRouter);
 
 // --- Socket.io Initialization ---
-initSocketServer(httpServer);
+// Create Socket.IO server, register middleware and connection handler
+const io = createSocketServer(httpServer);
+io.use(userSessionSocketMiddleware);
+io.on('connection', (socket) => handleSocketConnection(io, socket));
 
 // --- Session Cleanup Scheduler ---
 // Start session cleanup job (runs every 30 minutes, cleans sessions inactive for 60+ minutes)
-SessionCleanupScheduler.start('*/30 * * * *', 60);
+UserSessionCleanupScheduler.start('*/30 * * * *', 60);
 
 // --- Server Startup ---
 httpServer.listen(PORT, () => {
@@ -47,7 +51,7 @@ httpServer.listen(PORT, () => {
 // --- Graceful Shutdown ---
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, shutting down gracefully...');
-  SessionCleanupScheduler.stop();
+  UserSessionCleanupScheduler.stop();
   httpServer.close(() => {
     console.log('Server closed');
     process.exit(0);
@@ -56,7 +60,7 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
   console.log('SIGINT received, shutting down gracefully...');
-  SessionCleanupScheduler.stop();
+  UserSessionCleanupScheduler.stop();
   httpServer.close(() => {
     console.log('Server closed');
     process.exit(0);

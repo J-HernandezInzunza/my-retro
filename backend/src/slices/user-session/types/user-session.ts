@@ -1,11 +1,12 @@
 import { UserSession } from '../../../generated/prisma';
 
-export interface SessionUpdatePayload {
+export interface UserSessionUpdatePayload {
   displayName?: string;
   teamId?: string;
+  lastActive?: Date;
 }
 
-export interface SessionResponse {
+export interface UserSessionResponse {
   session: UserSession;
   isNew: boolean;
 }

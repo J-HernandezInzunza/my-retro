@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 import { PrismaClient, UserSession } from '../../../generated/prisma';
 import { prisma } from '../../../app/core/prisma';
-import { SessionResponse, SessionUpdatePayload } from '../types/user-session';
+import { UserSessionResponse, UserSessionUpdatePayload } from '../types/user-session';
 
 export class UserSessionService {
   private prisma: PrismaClient;
@@ -16,7 +16,7 @@ export class UserSessionService {
    * @param sessionId - Optional existing session ID
    * @returns The session and whether it's new
    */
-  async initializeSession(sessionId?: string): Promise<SessionResponse> {
+  async initializeSession(sessionId?: string, displayName?: string): Promise<UserSessionResponse> {
     // If session ID is provided, try to find the session
     if (sessionId) {
       const existingSession = await this.getSession(sessionId);
@@ -39,7 +39,7 @@ export class UserSessionService {
     }
     
     // Create a new session if no session found or no ID provided
-    const newSession = await this.createSession();
+    const newSession = await this.createSession(displayName);
     return {
       session: newSession,
       isNew: true
@@ -50,13 +50,13 @@ export class UserSessionService {
    * Create a new user session
    * @returns The created session
    */
-  async createSession(): Promise<UserSession> {
+  async createSession(displayName?: string): Promise<UserSession> {
     const sessionId = crypto.randomUUID();
     
     return this.prisma.userSession.create({
       data: {
         id: sessionId,
-        displayName: `Anonymous User ${Math.floor(1000 + Math.random() * 9000)}`
+        displayName: displayName || `Anonymous User ${Math.floor(1000 + Math.random() * 9000)}`
       }
     });
   }
@@ -67,7 +67,7 @@ export class UserSessionService {
    * @param payload - The update payload
    * @returns The updated session or null if not found
    */
-  async updateSession(sessionId: string, payload: SessionUpdatePayload): Promise<UserSession | null> {
+  async updateSession(sessionId: string, payload: UserSessionUpdatePayload): Promise<UserSession | null> {
     try {
       // Update session data and lastActive timestamp
       return await this.prisma.userSession.update({

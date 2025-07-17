@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { initializeSession, updateDisplayName, joinTeam, clearSession } from './user-session.controller';
-import SessionCleanupScheduler from '../business/user-session-cleanup.scheduler';
+import UserSessionCleanupScheduler from '../business/user-session-cleanup.scheduler';
 
 const router = Router();
 
@@ -10,6 +10,16 @@ const router = Router();
  *   post:
  *     summary: Initialize or retrieve user session
  *     tags: [User Session]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               displayName:
+ *                 type: string
+ *                 example: "John Doe"
  *     responses:
  *       200:
  *         description: Session initialized successfully
@@ -93,8 +103,8 @@ router.delete('/clear', clearSession);
  */
 router.get('/cleanup-status', async (req, res) => {
   try {
-    const schedulerInfo = SessionCleanupScheduler.getSchedulerInfo();
-    const sessionStats = await SessionCleanupScheduler.getSessionStats();
+    const schedulerInfo = UserSessionCleanupScheduler.getSchedulerInfo();
+    const sessionStats = await UserSessionCleanupScheduler.getSessionStats();
     
     res.status(200).json({
       scheduler: schedulerInfo,
@@ -130,7 +140,7 @@ router.get('/cleanup-status', async (req, res) => {
 router.post('/cleanup', async (req, res) => {
   try {
     const { inactiveThresholdMinutes = 60 } = req.body;
-    await SessionCleanupScheduler.runCleanupNow(inactiveThresholdMinutes);
+    await UserSessionCleanupScheduler.runCleanupNow(inactiveThresholdMinutes);
     
     res.status(200).json({ 
       message: 'Session cleanup completed',

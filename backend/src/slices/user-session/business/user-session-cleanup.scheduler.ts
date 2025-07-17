@@ -4,7 +4,7 @@ import { UserSessionCleanupService } from './user-session-cleanup.service';
 /**
  * Session cleanup scheduler using node-cron
  */
-export default class SessionCleanupScheduler {
+export default class UserSessionCleanupScheduler {
   private static tasks: cron.ScheduledTask[] = [];
 
   /**
