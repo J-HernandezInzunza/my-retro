@@ -2,40 +2,84 @@
 
 ## Purpose
 
-This slice handles user identification and initial setup for retrospective sessions. It manages the process of getting users into a retrospective session without requiring traditional authentication.
+This slice handles user identification and team assignment using a session-based identification system. It manages user creation and team association without requiring traditional authentication.
 
 ## Responsibilities
 
 - Session-based user identification
 - User name collection and validation
-- Initial user preferences setup
-- Joining existing retrospective sessions
+- Team assignment/joining
 - Creating new user sessions
+- Session persistence and management
+- Real-time online users display
 
-## Key Components (Future Implementation)
+## Directory Structure
 
-- `UserIdentificationForm.vue` - Collects user name and preferences
-- `SessionJoinForm.vue` - Allows users to join existing sessions
-- `UserPreferences.vue` - Manages user display preferences
+```text
+user-onboarding/
+├── index.ts                     # Public API exports
+├── README.md                    # Slice documentation
+├── api/
+│   └── user-session.api.ts      # API calls to session endpoints
+├── components/
+│   ├── UserIdentificationForm.vue  # For collecting user name
+│   └── SessionJoinForm.vue      # For joining team sessions
+├── composables/
+│   └── useUserSession.ts        # Session management logic
+├── store/
+│   └── userSessionStore.ts      # Pinia store for session state
+├── types/
+│   └── index.ts                 # TypeScript definitions
+└── views/
+    └── OnboardingView.vue       # Main view for user onboarding
+```
 
-## Key Services (Future Implementation)
+## Key Components
 
-- `userSessionService.ts` - Manages user session state
-- `userPreferencesService.ts` - Handles user preference persistence
+- `UserIdentificationForm.vue` - Collects user display name
+- `TeamJoinForm.vue` - Allows users to join existing teams
+- `OnboardingView.vue` - Main view that coordinates the onboarding flow
 
-## Types (Future Implementation)
+## Key Services
 
-- `UserSession` - User session data structure
-- `UserPreferences` - User preference data structure
+- `user-session.api.ts` - API client for backend session endpoints
+- `useUserSession.ts` - Composable for session management logic
+- `userSessionStore.ts` - Pinia store for session state management
+
+## Backend API Integration
+
+- `/api/user-session/initialize` - Create new session
+- `/api/user-session/update-name` - Update display name
+- `/api/user-session/join-team` - Join team session
+
+## Socket.io Integration
+
+- Session authentication via socket handshake
+- Real-time online users display
+- Connection status management
+
+## Types
+
+- `UserSession` - User session data structure that mirrors backend model
+
+## Routes
+
+- `/start` - New session creation
+- `/join/:teamId` - Join existing team
+
+## State Management
+
+- Session creation and persistence
+- Display name management
+- Team membership tracking
+- Online user status
 
 ## Routes (Future Implementation)
 
 - `/join` - Join existing session
 - `/start` - Start new session
-- `/preferences` - User preferences
 
 ## State Management (Future Implementation)
 
 - Current user session
-- User preferences
 - Session joining status

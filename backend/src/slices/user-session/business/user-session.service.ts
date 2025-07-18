@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 import { PrismaClient, UserSession } from '../../../generated/prisma';
 import { prisma } from '../../../app/core/prisma';
-import { UserSessionResponse, UserSessionUpdatePayload } from '../types/user-session';
+import { UserSessionInitializeRequest, UserSessionResponse, UserSessionUpdateRequest } from '../types/user-session';
 
 export class UserSessionService {
   private prisma: PrismaClient;
@@ -16,7 +16,7 @@ export class UserSessionService {
    * @param sessionId - Optional existing session ID
    * @returns The session and whether it's new
    */
-  async initializeSession(sessionId?: string, displayName?: string): Promise<UserSessionResponse> {
+  async initializeSession(sessionId?: string, initializeRequest?: UserSessionInitializeRequest): Promise<UserSessionResponse> {
     // If session ID is provided, try to find the session
     if (sessionId) {
       const existingSession = await this.getSession(sessionId);
@@ -39,7 +39,7 @@ export class UserSessionService {
     }
     
     // Create a new session if no session found or no ID provided
-    const newSession = await this.createSession(displayName);
+    const newSession = await this.createSession(initializeRequest?.displayName);
     return {
       session: newSession,
       isNew: true
@@ -67,7 +67,7 @@ export class UserSessionService {
    * @param payload - The update payload
    * @returns The updated session or null if not found
    */
-  async updateSession(sessionId: string, payload: UserSessionUpdatePayload): Promise<UserSession | null> {
+  async updateSession(sessionId: string, payload: UserSessionUpdateRequest): Promise<UserSession | null> {
     try {
       // Update session data and lastActive timestamp
       return await this.prisma.userSession.update({

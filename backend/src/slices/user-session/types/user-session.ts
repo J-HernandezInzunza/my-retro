@@ -1,6 +1,10 @@
 import { UserSession } from '../../../generated/prisma';
 
-export interface UserSessionUpdatePayload {
+export interface UserSessionInitializeRequest {
+  displayName?: string;
+}
+
+export interface UserSessionUpdateRequest {
   displayName?: string;
   teamId?: string;
   lastActive?: Date;

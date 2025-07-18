@@ -13,7 +13,7 @@ export const initializeSession = async (req: Request, res: Response) => {
     // Check if user already has a session
     let sessionId = req.session?.user?.id;
     
-    const result = await userSessionService.initializeSession(sessionId, req.body.displayName);
+    const result = await userSessionService.initializeSession(sessionId, req.body);
     
     // Store user data in express session (single source of truth)
     if (req.session) {
