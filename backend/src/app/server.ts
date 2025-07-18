@@ -7,10 +7,10 @@ import { createSocketServer, handleSocketConnection } from './core/socket';
 import swaggerSpec from './core/swagger';
 import healthcheckRouter from './health.routes';
 
-import userManagementRouter from '../slices/user-management/user-management.routes';
 import retrospectiveBoardRouter from '../slices/retrospective-board/retrospective-board.routes';
+import userManagementRouter from '../slices/user-management/user-management.routes';
 import userSessionRouter from '../slices/user-session/api/user-session.routes';
-import userSessionMiddleware from '../slices/user-session/api/user-session.middleware';
+import userSessionHttpMiddleware from '../slices/user-session/api/user-session-http.middleware';
 import userSessionSocketMiddleware from '../slices/user-session/api/user-session-socket.middleware';
 import UserSessionCleanupScheduler from '../slices/user-session/business/user-session-cleanup.scheduler';
 
@@ -28,7 +28,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api-health', healthcheckRouter);
 
 // --- API Routes ---
-app.use(userSessionMiddleware()); 
+app.use(userSessionHttpMiddleware); 
 app.use('/api/user-session', userSessionRouter);
 app.use('/api/users', userManagementRouter);
 app.use('/api/retrospective', retrospectiveBoardRouter);

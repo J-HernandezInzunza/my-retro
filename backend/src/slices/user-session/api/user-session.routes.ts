@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { initializeSession, updateDisplayName, joinTeam, clearSession } from './user-session.controller';
 import UserSessionCleanupScheduler from '../business/user-session-cleanup.scheduler';
+import { requireSession } from '../../../app/session-validation.middleware';
 
 const router = Router();
 
@@ -30,8 +31,8 @@ const router = Router();
  *               properties:
  *                 session:
  *                   $ref: '#/components/schemas/UserSession'
- *                 isNew:
- *                   type: boolean
+ *                 token:
+ *                   type: string
  */
 router.post('/initialize', initializeSession);
 
@@ -55,7 +56,7 @@ router.post('/initialize', initializeSession);
  *       200:
  *         description: Display name updated successfully
  */
-router.put('/update-name', updateDisplayName);
+router.put('/update-name', requireSession, updateDisplayName);
 
 /**
  * @swagger
@@ -77,7 +78,7 @@ router.put('/update-name', updateDisplayName);
  *       200:
  *         description: Successfully joined team
  */
-router.put('/join-team', joinTeam);
+router.put('/join-team', requireSession, joinTeam);
 
 /**
  * @swagger
@@ -89,7 +90,7 @@ router.put('/join-team', joinTeam);
  *       200:
  *         description: Session cleared successfully
  */
-router.delete('/clear', clearSession);
+router.delete('/clear', requireSession, clearSession);
 
 /**
  * @swagger

@@ -14,7 +14,7 @@ export class UserSessionService {
   /**
    * Initialize or retrieve a user session
    * @param sessionId - Optional existing session ID
-   * @returns The session and whether it's new
+   * @returns The session
    */
   async initializeSession(sessionId?: string, initializeRequest?: UserSessionInitializeRequest): Promise<UserSessionResponse> {
     // If session ID is provided, try to find the session
@@ -25,25 +25,16 @@ export class UserSessionService {
         // Update the lastActive timestamp
         const updatedSession = await this.updateSessionActivity(sessionId);
         if (updatedSession) {
-          return {
-            session: updatedSession,
-            isNew: false
-          };
+          return { session: updatedSession };
         }
         // If update failed, return the existing session
-        return {
-          session: existingSession,
-          isNew: false
-        };
+        return { session: existingSession };
       }
     }
     
     // Create a new session if no session found or no ID provided
     const newSession = await this.createSession(initializeRequest?.displayName);
-    return {
-      session: newSession,
-      isNew: true
-    };
+    return { session: newSession };
   }
   
   /**

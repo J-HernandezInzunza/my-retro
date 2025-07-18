@@ -12,5 +12,4 @@ export interface UserSessionUpdateRequest {
 
 export interface UserSessionResponse {
   session: UserSession;
-  isNew: boolean;
 }

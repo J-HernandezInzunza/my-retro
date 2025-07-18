@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from 'express';
  * @returns boolean indicating if session is valid
  */
 const hasValidSession = (req: Request): boolean => {
-  return !!(req.session && req.session.user && req.session.user.id);
+  return !!(req.userSession && req.userSession.id);
 };
 
 /**
@@ -16,7 +16,7 @@ const hasValidSession = (req: Request): boolean => {
 const sendAuthRequiredResponse = (res: Response) => {
   return res.status(401).json({ 
     error: 'Authentication required',
-    message: 'No active session found. Please initialize a session first.' 
+    message: 'No active session found.' 
   });
 };
 
@@ -42,8 +42,8 @@ export const requireTeamSession = (req: Request, res: Response, next: NextFuncti
     return sendAuthRequiredResponse(res);
   }
 
-  // Check if user is part of a team (we know session.user exists from hasValidSession check)
-  if (!req.session.user!.teamId) {
+  // Check if user is part of a team (we know userSession exists from hasValidSession check)
+  if (!req.userSession!.teamId) {
     return res.status(403).json({ 
       error: 'Team membership required',
       message: 'You must join a team to access this resource.' 
@@ -61,12 +61,12 @@ export const requireTeamSession = (req: Request, res: Response, next: NextFuncti
  */
 export const optionalSession = (req: Request, res: Response, next: NextFunction) => {
   // If no session, just continue (this is optional)
-  if (!req.session || !req.session.user) {
+  if (!req.userSession) {
     return next();
   }
 
   // If session exists but is invalid, return error
-  if (!req.session.user.id) {
+  if (!req.userSession.id) {
     return res.status(401).json({ 
       error: 'Invalid session',
       message: 'Session data is corrupted. Please clear and reinitialize your session.' 

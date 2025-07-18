@@ -11,16 +11,18 @@ const userSessionService = new UserSessionService();
 export const initializeSession = async (req: Request, res: Response) => {
   try {
     // Check if user already has a session
-    let sessionId = req.session?.user?.id;
+    let sessionId = req.userSession?.id;
     
     const result = await userSessionService.initializeSession(sessionId, req.body);
     
-    // Store user data in express session (single source of truth)
-    if (req.session) {
-      req.session.user = result.session;
-    }
+    // Generate token (for now, just use session ID)
+    // Later, implement proper token generation
+    const token = result.session.id;
     
-    res.status(200).json(result);
+    res.status(200).json({
+      ...result,
+      token
+    });
   } catch (error) {
     console.error('Error initializing session:', error);
     res.status(500).json({ error: 'Failed to initialize session' });
@@ -35,13 +37,7 @@ export const initializeSession = async (req: Request, res: Response) => {
 export const updateDisplayName = async (req: Request, res: Response) => {
   try {
     const { displayName } = req.body;
-    
-    // Get session ID from express session (single source of truth)
-    const sessionId = req.session?.user?.id;
-    
-    if (!sessionId) {
-      return res.status(401).json({ error: 'No active session' });
-    }
+    const sessionId = req.userSession!.id; // Get session ID from token-based authentication
 
     if (!displayName || typeof displayName !== 'string' || displayName.trim() === '') {
       return res.status(400).json({ error: 'Valid display name is required' });
@@ -51,11 +47,6 @@ export const updateDisplayName = async (req: Request, res: Response) => {
     
     if (!updatedSession) {
       return res.status(404).json({ error: 'Session not found' });
-    }
-
-    // Update user data in express session
-    if (req.session) {
-      req.session.user = updatedSession;
     }
 
     res.status(200).json({ session: updatedSession });
@@ -70,12 +61,10 @@ export const updateDisplayName = async (req: Request, res: Response) => {
 * @desc    Join team with session
 * @access  Public
 */
-export const joinTeam = async (req: Request, res: Response) => {
+export const joinTeam = async (req: Request, res: Response)=> {
   try {
     const { teamId } = req.body;
-    
-    // Get session ID from express session (single source of truth)
-    const sessionId = req.session?.user?.id;
+    const sessionId = req.userSession!.id; // Get session ID from token-based authentication
 
     if (!sessionId) {
       return res.status(401).json({ error: 'No active session' });
@@ -93,11 +82,6 @@ export const joinTeam = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    // Update user data in express session
-    if (req.session) {
-      req.session.user = updatedSession;
-    }
-
     res.status(200).json({ session: updatedSession });
   } catch (error) {
     console.error('Failed to join team:', error);
@@ -112,29 +96,14 @@ export const joinTeam = async (req: Request, res: Response) => {
 */
 export const clearSession = async (req: Request, res: Response) => {
   try {
-    // Get session ID from express session (single source of truth)
-    const sessionId = req.session?.user?.id;
+    const sessionId = req.userSession!.id; // Get session ID from token-based authentication
 
     // Delete from database if session exists
     if (sessionId) {
       await userSessionService.deleteSession(sessionId);
     }
     
-    // Always attempt to destroy express session (idempotent operation)
-    // This handles both cases: session exists or doesn't exist
-    if (req.session) {
-      req.session.destroy((err) => {
-        if (err) {
-          console.error('Session destruction error:', err);
-          return res.status(500).json({ error: 'Failed to clear session' });
-        }
-        // Success: session cleared (or was already cleared)
-        res.status(204).end();
-      });
-    } else {
-      // No session to clear, but that's still a successful "clear" operation
-      res.status(204).end();
-    }
+    res.status(204).end();
   } catch (error) {
     console.error('Failed to clear session:', error);
     res.status(500).json({ error: 'Failed to clear session' });
