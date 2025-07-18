@@ -1,8 +1,16 @@
 // User Onboarding Slice
-// This slice handles user identification and initial setup for retrospective sessions
 
-// Placeholder exports - will be implemented in future phases
-export const userOnboardingSlice = {
-  name: 'user-onboarding',
-  description: 'Handles user identification and initial setup for retrospective sessions',
-}
+// API Client
+export { UserSessionApi } from './api/user-session.api';
+
+// Store
+export { useUserSessionStore } from './stores/userSessionStore';
+
+// Composables
+export { useUserSession } from './composables/useUserSession';
+export type { UseUserSession, UseUserSessionOptions } from './composables/useUserSession';
+
+// Components
+export { default as UserIdentificationForm } from './components/UserIdentificationForm.vue';
+export { default as TeamJoinForm } from './components/TeamJoinForm.vue';
+export { default as OnboardingView } from './components/OnboardingView.vue';
