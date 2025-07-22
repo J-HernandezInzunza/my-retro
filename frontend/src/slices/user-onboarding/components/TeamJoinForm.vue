@@ -21,7 +21,7 @@ const submitForm = async () => {
   try {
     if (!teamId.value.trim()) return;
 
-    await userSessionStore.joinTeam(teamId.value);
+    await userSessionStore.joinTeam({ teamId: teamId.value });
     emit('completed');
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to join team';

@@ -2,81 +2,150 @@
 
 ## Purpose
 
-This slice handles user identification and team assignment using a session-based identification system. It manages user creation and team association without requiring traditional authentication.
+This slice handles user identification and team assignment using a **WebSocket-first** session-based identification system. It manages user session creation, display name collection, and team association without requiring traditional authentication, prioritizing real-time communication over HTTP requests.
+
+## Architecture
+
+**WebSocket-First Approach**: All session operations (initialize, update name, join team) are performed via WebSocket events rather than HTTP requests. This ensures consistent real-time communication.
 
 ## Responsibilities
 
-- Session-based user identification
-- User name collection and validation
-- Team assignment/joining
-- Creating new user sessions
-- Session persistence and management
-- Real-time online users display
+- WebSocket-based session initialization and management
+- Real-time user identification and display name updates
+- Team assignment/joining via WebSocket events
+- Session token-based authentication
+- Multi-step onboarding flow coordination
+- Shared type system integration with backend
 
 ## Directory Structure
 
 ```text
 user-onboarding/
-├── index.ts                     # Public API exports
-├── README.md                    # Slice documentation
-├── api/
-│   └── user-session.api.ts      # API calls to session endpoints
+├── index.ts                          # Public API exports
+├── README.md                         # Slice documentation
 ├── components/
-│   ├── UserIdentificationForm.vue  # For collecting user name
-│   └── SessionJoinForm.vue      # For joining team sessions
-├── store/
-│   └── userSessionStore.ts      # Pinia store for session state
-├── types/
-│   └── index.ts                 # TypeScript definitions
-└── views/
-    └── OnboardingView.vue       # Main view for user onboarding
+│   ├── OnboardingView.vue           # Main orchestrator component
+│   ├── UserIdentificationForm.vue   # Display name collection
+│   ├── TeamJoinForm.vue             # Team selection/joining
+│   └── OnboardingCompletion.vue     # Success completion state
+└── stores/
+    └── userSessionStore.ts          # Pinia store with WebSocket integration
 ```
 
 ## Key Components
 
-- `UserIdentificationForm.vue` - Collects user display name
-- `TeamJoinForm.vue` - Allows users to join existing teams
-- `OnboardingView.vue` - Main view that coordinates the onboarding flow
+### `OnboardingView.vue`
 
-## Key Services
+Main orchestrator that manages the multi-step onboarding flow:
 
-- `user-session.api.ts` - API client for backend session endpoints
-- `userSessionStore.ts` - Pinia store for session state management
+- **Loading** → **Identification** → **Team Join** → **Completed**
+- Handles step transitions and error states
+- Coordinates between form components
 
-## Backend API Integration
+### `UserIdentificationForm.vue`
 
-- `/api/user-session/initialize` - Create new session
-- `/api/user-session/update-name` - Update display name
-- `/api/user-session/join-team` - Join team session
+Collects and validates user display name:
 
-## Socket.io Integration
+- Real-time validation
+- WebSocket-based name updates
+- Error handling and loading states
 
-- Session authentication via socket handshake
-- Real-time online users display
-- Connection status management
+### `TeamJoinForm.vue`
 
-## Types
+Manages team selection and joining:
 
-- `UserSession` - User session data structure that mirrors backend model
+- Team discovery and selection
+- WebSocket-based team joining
+- Back navigation support
 
-## Routes
+### `OnboardingCompletion.vue`
 
-- `/start` - New session creation
-- `/join/:teamId` - Join existing team
+Success state component:
 
-## State Management
+- Completion confirmation
+- Navigation to next application phase
 
-- Session creation and persistence
-- Display name management
-- Team membership tracking
-- Online user status
+## WebSocket Integration
 
-## Routes (Future Implementation)
+### Session Events
 
-- `/join` - Join existing session
-- `/start` - Start new session
+- `session:initialize` - Create/restore user session with optional display name
+- `session:update-name` - Update user display name
+- `session:join-team` - Join a team by ID
+- `session:updated` - Real-time session updates (server → client)
+- `session:online-users` - Real-time online user list updates
 
-## State Management (Future Implementation)
+### Authentication Flow
 
-- Current user session
-- Session joining status
+1. Initialize session via WebSocket
+2. Receive session token from server
+3. Store token in socket service for subsequent requests
+4. All further operations use token-based auth
+
+## State Management (`userSessionStore.ts`)
+
+### Actions
+
+- `initializeUserSession(data?)` - Initialize session with optional display name
+- `updateDisplayName(name)` - Update user's display name via WebSocket
+- `joinTeam(teamId)` - Join team via WebSocket
+- `reset()` - Reset store state without clearing backend session
+
+### Getters
+
+- `isIdentified` - Check if user has provided display name
+- `hasTeam` - Check if user has joined a team
+- `isOnboarded` - Check if user completed full onboarding
+- `displayName` - Get current display name
+- `teamId` - Get current team ID
+- `sessionId` - Get current session ID
+
+### State Structure
+
+```typescript
+interface UserSessionState {
+  userSession: {
+    isLoading: boolean;
+    data: UserSession | null;
+    error: string | null;
+  }
+}
+```
+
+## Shared Types Integration
+
+Uses shared types from `/frontend/src/shared/types/user-session.ts`:
+
+- `UserSession` - Core session data structure
+- `UserSessionInitializeRequest` - Session initialization payload
+- `UserSessionUpdateRequest` - Session update payload
+- `SESSION_EVENTS` - WebSocket event constants
+
+## Error Handling
+
+- WebSocket connection failures
+- Session initialization errors
+- Display name validation errors
+- Team joining failures
+- Automatic error state management in store
+
+## Integration Points
+
+### Socket Service
+
+- Uses global `socketService` for WebSocket communication
+- Token-based authentication integration
+- Async event emission with response handling
+
+### Router Integration
+
+- Onboarding completion triggers navigation
+- Route guards can check onboarding status via store getters
+
+## Future Enhancements
+
+- Team creation functionality
+- Invite-based team joining
+- User avatar/profile customization
+- Onboarding progress persistence
+- Multi-language support

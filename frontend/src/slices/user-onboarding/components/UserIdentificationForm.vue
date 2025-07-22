@@ -20,7 +20,7 @@ const submitForm = async () => {
   try {
     if (!displayName.value.trim()) return;
 
-    await userSessionStore.updateDisplayName(displayName.value);
+    await userSessionStore.updateDisplayName({ displayName: displayName.value });
     emit('completed');
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to save your name';

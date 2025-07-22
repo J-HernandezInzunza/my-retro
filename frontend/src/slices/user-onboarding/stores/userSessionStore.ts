@@ -61,11 +61,11 @@ export const useUserSessionStore = defineStore('userSession', {
     /**
      * Update user's display name
      */
-    async updateDisplayName(name: string): Promise<void> {
+    async updateDisplayName(data: UserSessionUpdateRequest): Promise<void> {
       try {
         this.userSession.isLoading = true;
         this.userSession.error = null;
-        const response = await socketService.emitAsync<typeof SESSION_EVENTS.UPDATE_NAME>(SESSION_EVENTS.UPDATE_NAME, { displayName: name });
+        const response = await socketService.emitAsync<typeof SESSION_EVENTS.UPDATE_NAME>(SESSION_EVENTS.UPDATE_NAME, data);
 
         if ('error' in response) {
           this.userSession.error = response.error;
@@ -88,11 +88,11 @@ export const useUserSessionStore = defineStore('userSession', {
     /**
      * Join a team via WebSocket
      */
-    async joinTeam(teamId: string): Promise<void> {
+    async joinTeam(data: UserSessionUpdateRequest): Promise<void> {
       try {
         this.userSession.isLoading = true;
         this.userSession.error = null;
-        const response = await socketService.emitAsync<typeof SESSION_EVENTS.JOIN_TEAM>(SESSION_EVENTS.JOIN_TEAM, { teamId });
+        const response = await socketService.emitAsync<typeof SESSION_EVENTS.JOIN_TEAM>(SESSION_EVENTS.JOIN_TEAM, data);
 
         if ('error' in response) {
           this.userSession.error = response.error;

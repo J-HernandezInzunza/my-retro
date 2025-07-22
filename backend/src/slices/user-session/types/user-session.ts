@@ -35,11 +35,11 @@ export interface SocketUserEventMap {
     response: UserSessionResponse & { token: string } | { error: string };
   };
   [SESSION_EVENTS.UPDATE_NAME]: {
-    request: { displayName: string };
+    request: UserSessionUpdateRequest;
     response: UserSessionResponse | { error: string };
   };
   [SESSION_EVENTS.JOIN_TEAM]: {
-    request: { teamId: string };
+    request: UserSessionUpdateRequest;
     response: UserSessionResponse | { error: string };
   };
   [SESSION_EVENTS.CLEAR]: {
