@@ -1,12 +1,19 @@
 import { defineStore } from 'pinia';
 
-import type { UserSession, UserSessionUpdateRequest } from '@shared/backend';
-import { UserSessionApi } from '../api/user-session.api';
+import {
+  SESSION_EVENTS,
+  type UserSession,
+  type UserSessionInitializeRequest,
+  type UserSessionUpdateRequest,
+} from '@shared/backend';
+import { socketService } from '@/shared/socket-service';
 
 interface UserSessionState {
-  session: UserSession | null;
-  loading: boolean;
-  error: string | null;
+  userSession: {
+    isLoading: boolean,
+    data: UserSession | null,
+    error: string | null,
+  }
 }
 
 /**
@@ -15,99 +22,105 @@ interface UserSessionState {
  */
 export const useUserSessionStore = defineStore('userSession', {
   state: (): UserSessionState => ({
-    session: null,
-    loading: false,
-    error: null,
+    userSession: {
+      isLoading: false,
+      data: null,
+      error: null,
+    },
   }),
   actions: {
-    /**
-     * Fetch session (initialize or get existing)
-     */
-    async fetchSession(displayName?: string): Promise<void> {
-      this.loading = true;
-      this.error = null;
-      
+    async initializeUserSession(data: UserSessionInitializeRequest = {}): Promise<void> {
       try {
-        this.session = await UserSessionApi.initializeSession({ displayName });
+        console.log('[UserSessionStore] Initializing');
+        this.userSession.isLoading = true;
+        this.userSession.error = null;
+        const response = await socketService.emitAsync<typeof SESSION_EVENTS.INITIALIZE>(SESSION_EVENTS.INITIALIZE, data);
+  
+        if ('error' in response) {
+          this.userSession.error = response.error;
+          return;
+        }
+        // Save token in socket service
+        socketService.setToken(response.token);
+        this.userSession.data = response.session; 
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch session';
-        this.error = errorMessage;
+        this.userSession.error = errorMessage;
       } finally {
-        this.loading = false;
+        this.userSession.isLoading = false;
       }
+    },
+    
+    /**
+     * Fetch the current user session from the server
+     */
+    async fetchSession(displayName?: string): Promise<void> {
+      // TODO:
     },
     
     /**
      * Update user's display name
      */
-    async updateDisplayName(displayName: string): Promise<void> {
-      if (!displayName?.trim()) {
-        this.error = 'Display name cannot be empty';
-        return;
-      }
-      
-      this.loading = true;
-      this.error = null;
-      
+    async updateDisplayName(name: string): Promise<void> {
       try {
-        const payload: UserSessionUpdateRequest = { displayName };
-        this.session = await UserSessionApi.updateDisplayName(payload);
-      } catch (err: unknown) {
+        this.userSession.isLoading = true;
+        this.userSession.error = null;
+        const response = await socketService.emitAsync<typeof SESSION_EVENTS.UPDATE_NAME>(SESSION_EVENTS.UPDATE_NAME, { displayName: name });
+
+        if ('error' in response) {
+          this.userSession.error = response.error;
+          return;
+        }
+
+        if (!this.userSession.data) {
+          return;
+        }
+
+        this.userSession.data.displayName = response.session.displayName;
+      } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to update display name';
-        this.error = errorMessage;
+        this.userSession.error = errorMessage;
       } finally {
-        this.loading = false;
+        this.userSession.isLoading = false;
       }
     },
     
     /**
-     * Join a team
+     * Join a team via WebSocket
      */
     async joinTeam(teamId: string): Promise<void> {
-      if (!teamId?.trim()) {
-        this.error = 'Team ID cannot be empty';
-        return;
-      }
-      
-      this.loading = true;
-      this.error = null;
-      
       try {
-        const payload: UserSessionUpdateRequest = { teamId };
-        this.session = await UserSessionApi.joinTeam(payload);
+        this.userSession.isLoading = true;
+        this.userSession.error = null;
+        const response = await socketService.emitAsync<typeof SESSION_EVENTS.JOIN_TEAM>(SESSION_EVENTS.JOIN_TEAM, { teamId });
+
+        if ('error' in response) {
+          this.userSession.error = response.error;
+          return;
+        }
+
+        if (!this.userSession.data) {
+          return;
+        }
+
+        this.userSession.data.teamId = response.session.teamId;
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to join team';
-        this.error = errorMessage;
+        this.userSession.error = errorMessage;
       } finally {
-        this.loading = false;
+        this.userSession.isLoading = false;
       }
     },
-    
-    /**
-     * Clear current session
-     */
-    async clearSession(): Promise<void> {
-      this.loading = true;
-      this.error = null;
-      
-      try {
-        await UserSessionApi.clearSession();
-        this.session = null;
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to clear session';
-        this.error = errorMessage;
-      } finally {
-        this.loading = false;
-      }
-    },
-    
+
     /**
      * Reset store state (without clearing backend session)
      */
     reset(): void {
-      this.session = null;
-      this.loading = false;
-      this.error = null;
+      this.userSession = {
+        isLoading: false,
+        data: null,
+        error: null,
+      };
     }
   },
   getters: {
@@ -115,42 +128,43 @@ export const useUserSessionStore = defineStore('userSession', {
      * Check if user has identified themselves (has display name)
      */
     isIdentified(state: UserSessionState): boolean {
-      return Boolean(state.session?.displayName);
+      const isAnonymous = state.userSession?.data?.displayName.includes('Anonymous User')
+      return Boolean(!isAnonymous);
     },
     
     /**
      * Check if user has joined a team
      */
     hasTeam(state: UserSessionState): boolean {
-      return Boolean(state.session?.teamId);
+      return Boolean(state.userSession?.data?.teamId);
     },
     
     /**
      * Check if user is fully onboarded (identified and joined team)
      */
     isOnboarded(state: UserSessionState): boolean {
-      return Boolean(state.session?.displayName && state.session?.teamId);
+      return Boolean(state.userSession?.data?.displayName && state.userSession?.data?.teamId);
     },
     
     /**
      * Get user's display name or empty string
      */
     displayName(state: UserSessionState): string {
-      return state.session?.displayName || '';
+      return state.userSession?.data?.displayName || '';
     },
     
     /**
      * Get user's team ID or null
      */
     teamId(state: UserSessionState): string | null {
-      return state.session?.teamId || null;
+      return state.userSession?.data?.teamId || null;
     },
     
     /**
      * Get user's session ID or null
      */
     sessionId(state: UserSessionState): string | null {
-      return state.session?.id || null;
+      return state.userSession?.data?.id || null;
     },
   }
 });

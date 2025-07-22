@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useUserSession } from '../composables/useUserSession';
+import { useUserSessionStore } from '../stores/userSessionStore';
+import { storeToRefs } from 'pinia';
 
 defineOptions({
   name: 'UserIdentificationForm'
@@ -8,35 +9,22 @@ defineOptions({
 
 const emit = defineEmits<{
   (e: 'completed'): void;
-  (e: 'update:loading', value: boolean): void;
   (e: 'error', message: string): void;
 }>();
 
-const { loading, error, updateDisplayName, fetchSession } = useUserSession();
+const userSessionStore = useUserSessionStore();
+const { userSession } = storeToRefs(userSessionStore);
 const displayName = ref('');
 
-const submitForm = async () => {
-  if (!displayName.value.trim()) return;
-  
-  emit('update:loading', true);
-  
+const submitForm = async () => {  
   try {
-    // Try to initialize with display name first
-    await fetchSession(displayName.value);
-    
-    // If that didn't set the name, update it
-    await updateDisplayName(displayName.value);
-    
-    if (error.value) {
-      emit('error', error.value);
-    } else {
-      emit('completed');
-    }
+    if (!displayName.value.trim()) return;
+
+    await userSessionStore.updateDisplayName(displayName.value);
+    emit('completed');
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to save your name';
     emit('error', message);
-  } finally {
-    emit('update:loading', false);
   }
 };
 </script>
@@ -57,9 +45,9 @@ const submitForm = async () => {
             v-model="displayName"
             label="Your Name"
             :rules="[(val) => !!val || 'Please enter your name']"
-            :loading="loading"
-            :error="!!error"
-            :error-message="error || ''"
+            :loading="userSession.isLoading"
+            :error="!!userSession.error"
+            :error-message="userSession.error || ''"
             autofocus
             data-cy="display-name-input"
           >
@@ -73,8 +61,8 @@ const submitForm = async () => {
               type="submit"
               color="primary"
               label="Continue"
-              :loading="loading"
-              :disable="!displayName || loading"
+              :loading="userSession.isLoading"
+              :disable="!displayName || userSession.isLoading"
               data-cy="submit-display-name"
             />
           </div>

@@ -5,32 +5,35 @@ import { UserSessionService } from '../business/user-session.service';
 const userSessionService = new UserSessionService();
 
 /**
- * Socket.io middleware to attach session information to socket
+ * Socket.io middleware to attach session information to socket using token authentication
  */
 const userSessionSocketMiddleware = async (socket: Socket, next: (err?: ExtendedError) => void) => {
   try {
-    // Get session ID from socket handshake (sent by client)
-    const sessionId = socket.handshake.auth?.sessionId || socket.handshake.query?.sessionId;
+    // Get token from socket handshake (sent by client)
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
     
-    if (!sessionId) {
+    if (!token) {
       // Allow connection without session (for public features)
       socket.data.session = null;
       return next();
     }
 
+    // For now, token is the session ID
+    // In future, implement proper token validation/decoding
+    const sessionId = token as string;
+
     // Validate session exists and is active
-    const session = await userSessionService.getSession(sessionId as string);
+    const session = await userSessionService.getSession(sessionId);
     
     if (!session) {
+      console.log(`Socket ${socket.id} authentication failed: Invalid token`);
       // Session doesn't exist, allow connection but mark as no session
       socket.data.session = null;
       return next();
     }
 
     // Update last active time for the session
-    await userSessionService.updateSession(sessionId as string, {
-      lastActive: new Date()
-    });
+    await userSessionService.updateSessionActivity(sessionId);
 
     // Attach session data to socket
     socket.data.session = {

@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import MainLayout from '../shared/ui/MainLayout.vue'
 import HomeView from '../slices/landing-page/views/HomeView.vue'
-import OnboardingView from '../slices/user-onboarding/components/OnboardingView.vue'
+
+const MainLayout = () => import('../shared/ui/MainLayout.vue')
+const OnboardingView = () => import('../slices/user-onboarding/components/OnboardingView.vue')
+const ParticipantView = () => import('../slices/retro-participation/ui/views/ParticipantView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,7 +20,7 @@ const router = createRouter({
         {
           path: '/participant',
           name: 'participant',
-          component: () => import('../slices/retro-participation/ui/views/ParticipantView.vue'),
+          component: ParticipantView,
         },
         {
           path: '/onboarding',

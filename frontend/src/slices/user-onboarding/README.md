@@ -24,8 +24,6 @@ user-onboarding/
 ├── components/
 │   ├── UserIdentificationForm.vue  # For collecting user name
 │   └── SessionJoinForm.vue      # For joining team sessions
-├── composables/
-│   └── useUserSession.ts        # Session management logic
 ├── store/
 │   └── userSessionStore.ts      # Pinia store for session state
 ├── types/
@@ -43,7 +41,6 @@ user-onboarding/
 ## Key Services
 
 - `user-session.api.ts` - API client for backend session endpoints
-- `useUserSession.ts` - Composable for session management logic
 - `userSessionStore.ts` - Pinia store for session state management
 
 ## Backend API Integration

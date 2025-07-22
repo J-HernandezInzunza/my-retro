@@ -3,10 +3,8 @@
     <!-- Header -->
     <q-header elevated class="bg-primary text-white">
       <q-toolbar>
-        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
-
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleSidebar" />
         <q-toolbar-title> My Retro </q-toolbar-title>
-
         <div>
           <q-btn flat round dense icon="account_circle" />
         </div>
@@ -14,7 +12,7 @@
     </q-header>
 
     <!-- Left Drawer / Sidebar -->
-    <q-drawer v-model="leftDrawerOpen" bordered class="bg-grey-1">
+    <q-drawer v-model="isSidebarOpen" bordered class="bg-grey-1">
       <q-list>
         <q-item-label header> Navigation </q-item-label>
 
@@ -62,13 +60,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue';
+// import { useSocket } from '../../shared/socket-composable';
+import { socketService } from '../socket-service';
 
-const leftDrawerOpen = ref(false)
+// Initialize socket connection
+// This is the ONLY place in the app where we initialize the socket
+const { state } = socketService;
+const isSidebarOpen = ref(false);
 
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+function toggleSidebar() {
+  isSidebarOpen.value = !isSidebarOpen.value;
 }
+
+// Set up socket connection when layout mounts - belt and suspenders
+onMounted(() => {
+  console.log('[MainLayout] App initialization - socket connected:', state.connected);
+  if (!state.connected) {
+    console.log('[MainLayout] App initialization - requesting socket connection');
+    socketService.connect();
+  }
+});
+
+onUnmounted(() => {
+  socketService.disconnect();
+})
 </script>
 
 <style scoped>

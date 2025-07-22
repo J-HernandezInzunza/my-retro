@@ -20,10 +20,15 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+    hmr: false,
   },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@shared': fileURLToPath(new URL('../shared', import.meta.url)),
     },
+  },
+  optimizeDeps: {
+    include: ['@shared/backend'],
   },
 })

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useUserSession } from '../composables/useUserSession';
+import { storeToRefs } from 'pinia';
+import { useUserSessionStore } from '../stores/userSessionStore';
 
 defineOptions({
   name: 'TeamJoinForm'
@@ -8,32 +9,23 @@ defineOptions({
 
 const emit = defineEmits<{
   (e: 'completed'): void;
-  (e: 'update:loading', value: boolean): void;
   (e: 'error', message: string): void;
   (e: 'back'): void;
 }>();
 
-const { loading, error, joinTeam } = useUserSession();
+const userSessionStore = useUserSessionStore();
+const { userSession } = storeToRefs(userSessionStore);
 const teamId = ref('');
 
 const submitForm = async () => {
-  if (!teamId.value.trim()) return;
-  
-  emit('update:loading', true);
-  
   try {
-    await joinTeam(teamId.value);
-    
-    if (error.value) {
-      emit('error', error.value);
-    } else {
-      emit('completed');
-    }
+    if (!teamId.value.trim()) return;
+
+    await userSessionStore.joinTeam(teamId.value);
+    emit('completed');
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to join team';
     emit('error', message);
-  } finally {
-    emit('update:loading', false);
   }
 };
 </script>
@@ -54,9 +46,9 @@ const submitForm = async () => {
             v-model="teamId"
             label="Team ID"
             :rules="[(val) => !!val || 'Please enter a team ID']"
-            :loading="loading"
-            :error="!!error"
-            :error-message="error || ''"
+            :loading="userSession.isLoading"
+            :error="!!userSession.error"
+            :error-message="userSession.error || ''"
             autofocus
             data-cy="team-id-input"
           >
@@ -70,7 +62,7 @@ const submitForm = async () => {
               flat
               color="grey-7"
               label="Back"
-              :disable="loading"
+              :disable="userSession.isLoading"
               @click="emit('back')"
               data-cy="back-button"
             />
@@ -78,8 +70,8 @@ const submitForm = async () => {
               type="submit"
               color="primary"
               label="Join Team"
-              :loading="loading"
-              :disable="!teamId || loading"
+              :loading="userSession.isLoading"
+              :disable="!teamId || userSession.isLoading"
               data-cy="submit-team-id"
             />
           </div>

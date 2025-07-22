@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { storeToRefs } from 'pinia';
 
-import { useUserSession } from '../composables/useUserSession';
+import { useUserSessionStore } from '../stores/userSessionStore';
 import UserIdentificationForm from './UserIdentificationForm.vue';
 import TeamJoinForm from './TeamJoinForm.vue';
+import OnboardingCompletion from './OnboardingCompletion.vue';
+import router from '@/app/router';
 
 defineOptions({
   name: 'OnboardingView'
@@ -23,46 +26,46 @@ enum OnboardingStep {
   Completed = 'completed'
 }
 
-// Initialize user session composable
-const { loading, error, session, isIdentified, isOnboarded, fetchSession } = useUserSession();
+const userSessionStore = useUserSessionStore();
+const { userSession, isIdentified, isOnboarded } = storeToRefs(userSessionStore);
 const currentStep = ref<OnboardingStep>(OnboardingStep.Loading);
 
 // Computed properties to control component visibility based on current step
+const showLoadingStep = computed(() => currentStep.value === OnboardingStep.Loading)
 const showIdentificationForm = computed(() => currentStep.value === OnboardingStep.Identification);
 const showTeamJoinForm = computed(() => currentStep.value === OnboardingStep.TeamJoin);
+const showCompletedStep = computed(() => currentStep.value === OnboardingStep.Completed);
 
 // Reset error and show new error
 const showError = (message: string) => {
-  error.value = message;
-  setTimeout(() => {
-    error.value = null;
-  }, 5000); // Clear error after 5 seconds
+  // Instead of directly mutating error state, emit event for parent to handle
+  emit('error', message);
 };
 
 // Initialize session and determine initial step
 const initializeSession = async () => {
-  loading.value = true;
-  error.value = null;
-
   try {
-    await fetchSession();
+    // Let the store handle loading and error state
+    await userSessionStore.initializeUserSession();
+    console.log('userSession.value: ', userSession.value);
 
-    // Determine the correct step based on session state
+    // Determine next step based on session state
     if (!isIdentified.value) {
-      currentStep.value = OnboardingStep.Identification;
+      handleBeginOnboarding();
     } else if (!isOnboarded.value) {
-      currentStep.value = OnboardingStep.TeamJoin;
+      handleIdentificationComplete();
     } else {
-      currentStep.value = OnboardingStep.Completed;
-      emit('completed');
+      handleTeamJoinComplete();
     }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to initialize session';
-    showError(message);
-    currentStep.value = OnboardingStep.Identification;
-  } finally {
-    loading.value = false;
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to initialize session';
+    showError(errorMessage);
+    handleBeginOnboarding();
   }
+};
+
+const handleBeginOnboarding = () => {
+  currentStep.value = OnboardingStep.Identification;
 };
 
 // Handle completion of identification step
@@ -73,16 +76,17 @@ const handleIdentificationComplete = () => {
 // Handle completion of team join step
 const handleTeamJoinComplete = () => {
   currentStep.value = OnboardingStep.Completed;
-  emit('completed');
 };
 
-// Handle back button in team join form
-const handleTeamJoinBack = () => {
-  currentStep.value = OnboardingStep.Identification;
+// Handle completion of onboarding
+const handleOnboardingCompleted = () => {
+  // TODO: Push route to a retro session selection view filtered by team
 };
 
 // Initialize on component mount
-onMounted(initializeSession);
+onMounted(async() => {
+  await initializeSession()
+});
 </script>
 
 <template>
@@ -92,72 +96,41 @@ onMounted(initializeSession);
       <p class="text-subtitle1 q-ma-none">Get started with your retrospective session</p>
     </div>
 
-    <!-- Loading state -->
-    <div v-if="currentStep === 'loading'" class="flex-center q-py-xl">
-      <q-spinner size="3em" color="primary" />
-      <div class="q-mt-md">Initializing your session...</div>
-    </div>
-
     <!-- Error alert -->
-    <q-banner v-if="error" rounded class="bg-negative text-white q-mb-md">
+    <q-banner v-if="userSession.error" rounded class="bg-negative text-white q-mb-md">
       <template #avatar>
         <q-icon name="error" />
       </template>
-      {{ error }}
+      {{ userSession.error }}
       <template #action>
-        <q-btn flat label="Dismiss" color="white" @click="error = null" />
+        <q-btn flat label="Dismiss" color="white" @click="userSession.error = null" />
       </template>
     </q-banner>
 
-    <!-- User identification step -->
-    <transition
-      appear
-      enter-active-class="animated fadeIn"
-      leave-active-class="animated fadeOut"
-    >
+    <transition name="fade" mode="out-in">
+      <!-- Loading state -->
+      <div v-if="showLoadingStep" class="flex-center q-py-xl">
+        <q-spinner size="3em" color="primary" />
+        <div class="q-mt-md">Initializing your session...</div>
+      </div>
+      <!-- User identification step -->
       <UserIdentificationForm
-        v-if="showIdentificationForm"
+        v-else-if="showIdentificationForm"
         @completed="handleIdentificationComplete"
-        @update:loading="loading = $event"
         @error="showError"
       />
-    </transition>
-
-    <!-- Team join step -->
-    <transition
-      appear
-      enter-active-class="animated fadeIn"
-      leave-active-class="animated fadeOut"
-    >
+      <!-- Team join step -->
       <TeamJoinForm
-        v-if="showTeamJoinForm"
+        v-else-if="showTeamJoinForm"
         @completed="handleTeamJoinComplete"
-        @update:loading="loading = $event"
         @error="showError"
-        @back="handleTeamJoinBack"
+        @back="handleBeginOnboarding"
+        />
+      <!-- Completed step -->
+      <OnboardingCompletion
+        v-else-if="showCompletedStep"
+        @completed="handleOnboardingCompleted"
       />
-    </transition>
-
-    <!-- Completed step (brief success message) -->
-    <transition appear enter-active-class="animated fadeIn">
-      <q-card
-        v-if="currentStep === 'completed'"
-        flat
-        bordered
-        class="text-center q-pa-md"
-      >
-        <q-card-section>
-          <q-icon name="check_circle" color="positive" size="4em" />
-          <h2 class="q-mt-md q-mb-xs">All Set!</h2>
-          <p class="q-ma-none">
-            You're all set up and ready to start your retrospective session.
-          </p>
-        </q-card-section>
-
-        <q-card-actions align="center">
-          <q-btn color="primary" label="Let's Go!" @click="emit('completed')" />
-        </q-card-actions>
-      </q-card>
     </transition>
   </div>
 </template>

@@ -1,5 +1,7 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import { registerUserSessionHandlers } from '../../slices/user-session/api/user-session-socket.handlers';
+import { SESSION_EVENTS } from '../../slices/user-session/types/user-session';
 
 // Track online users
 export interface OnlineUser {
@@ -34,27 +36,27 @@ export const handleSocketConnection = (io: Server, socket: Socket) => {
     displayName: session?.displayName || 'Anonymous',
     sessionId: session?.id || null,
     teamId: session?.teamId || null,
-    connectedAt: new Date()
+    connectedAt: new Date(),
   };
   
+  // Emit updated online users list to all clients (including newly connected user)
   onlineUsers.set(socket.id, user);
-  
   console.log(`User connected: ${user.displayName} (Total online: ${onlineUsers.size})`);
+  io.emit(SESSION_EVENTS.ONLINE_USERS, Array.from(onlineUsers.values()));
+  
+  // Register user session event handlers
+  registerUserSessionHandlers(socket);
+
+  // Handle disconnection
+  socket.on('disconnect', () => handleSocketDisconnection(socket));
+};
+
+export const handleSocketDisconnection = (socket: Socket) => {
+  const user = onlineUsers.get(socket.id);
+  console.log(`User disconnected: ${user?.displayName} (Total online: ${onlineUsers.size})`);
+  // Remove user from online users
+  onlineUsers.delete(socket.id);
   
   // Emit updated online users list to all clients
-  io.emit('online users', Array.from(onlineUsers.values()));
-  
-  // Handle requests for online users list
-  socket.on('get online users', () => {
-    socket.emit('online users', Array.from(onlineUsers.values()));
-  });
-
-  socket.on('disconnect', () => {
-    // Remove user from online users
-    onlineUsers.delete(socket.id);
-    console.log(`User disconnected: ${user.displayName} (Total online: ${onlineUsers.size})`);
-    
-    // Emit updated online users list to all clients
-    io.emit('online users', Array.from(onlineUsers.values()));
-  });
+  socket.broadcast.emit(SESSION_EVENTS.ONLINE_USERS, Array.from(onlineUsers.values()));
 };
