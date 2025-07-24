@@ -26,9 +26,8 @@ enum UserRole {
 
 // Team member roles within a specific team
 enum TeamMemberRole {
-  OWNER       // Created the team, full control
-  FACILITATOR // Can manage retros and team settings
-  MEMBER      // Regular team member
+  FACILITATOR // Can create/manage retros and moderate sessions
+  MEMBER      // Regular team member, can participate in retros
 }
 
 model Team {
@@ -37,17 +36,11 @@ model Team {
   inviteCode String   @unique @default(cuid()) // Unique invite code for joining
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  createdBy  String   // User ID who created the team
-  updatedBy  String?  // User ID who last updated the team
 
   // Multi-team relationships
   members   TeamMember[]
   sessions  RetroSession[]
   
-  // Relation for UserSession current team (opposite side)
-  currentUserSessions UserSession[] @relation("UserSessionCurrentTeam")
-  
-  // Relation to creator (but not a foreign key to avoid circular dependency issues)
   @@index([inviteCode])
 }
 
@@ -56,16 +49,10 @@ model UserSession {
   displayName   String   @default("Anonymous User")
   createdAt     DateTime @default(now())
   lastActive    DateTime @default(now())
-  currentTeamId String?  // Current active team (for multi-team support)
 
   // Optional relationship to User if/when they create a full account
   user          User?    @relation(fields: [userId], references: [id])
   userId        String?  @unique
-  
-  // Relation to current team (optional, for quick access)
-  currentTeam   Team?    @relation("UserSessionCurrentTeam", fields: [currentTeamId], references: [id])
-  
-  @@index([currentTeamId])
 }
 
 model User {

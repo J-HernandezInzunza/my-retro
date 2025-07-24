@@ -21,15 +21,6 @@
           "type": "string",
           "format": "date-time"
         },
-        "createdBy": {
-          "type": "string"
-        },
-        "updatedBy": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "members": {
           "type": "array",
           "items": {
@@ -40,12 +31,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/RetroSession"
-          }
-        },
-        "currentUserSessions": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/UserSession"
           }
         }
       }
@@ -72,16 +57,6 @@
           "anyOf": [
             {
               "$ref": "#/definitions/User"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "currentTeam": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Team"
             },
             {
               "type": "null"
@@ -167,7 +142,6 @@
           "type": "string",
           "default": "MEMBER",
           "enum": [
-            "OWNER",
             "FACILITATOR",
             "MEMBER"
           ]

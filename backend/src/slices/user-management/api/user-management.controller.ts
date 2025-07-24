@@ -60,6 +60,7 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     // If session is linked to a permanent user, get user details
     if (session.userId) {
       const user = await userService.getUser(session.userId);
+
       if (user) {
         return res.status(200).json({
           type: 'permanent_user',
