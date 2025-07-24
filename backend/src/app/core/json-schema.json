@@ -10,6 +10,9 @@
         "name": {
           "type": "string"
         },
+        "inviteCode": {
+          "type": "string"
+        },
         "createdAt": {
           "type": "string",
           "format": "date-time"
@@ -18,16 +21,31 @@
           "type": "string",
           "format": "date-time"
         },
-        "users": {
+        "createdBy": {
+          "type": "string"
+        },
+        "updatedBy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "members": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/User"
+            "$ref": "#/definitions/TeamMember"
           }
         },
         "sessions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/RetroSession"
+          }
+        },
+        "currentUserSessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UserSession"
           }
         }
       }
@@ -50,16 +68,20 @@
           "type": "string",
           "format": "date-time"
         },
-        "teamId": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "user": {
           "anyOf": [
             {
               "$ref": "#/definitions/User"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currentTeam": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Team"
             },
             {
               "type": "null"
@@ -74,16 +96,21 @@
         "id": {
           "type": "string"
         },
-        "sessionId": {
+        "email": {
           "type": [
             "string",
             "null"
           ]
         },
         "displayName": {
-          "type": [
-            "string",
-            "null"
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "default": "MEMBER",
+          "enum": [
+            "ADMIN",
+            "MEMBER"
           ]
         },
         "createdAt": {
@@ -94,15 +121,11 @@
           "type": "string",
           "format": "date-time"
         },
-        "team": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/Team"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "teamMemberships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TeamMember"
+          }
         },
         "userSession": {
           "anyOf": [
@@ -131,6 +154,33 @@
           "items": {
             "$ref": "#/definitions/ActionItem"
           }
+        }
+      }
+    },
+    "TeamMember": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "default": "MEMBER",
+          "enum": [
+            "OWNER",
+            "FACILITATOR",
+            "MEMBER"
+          ]
+        },
+        "joinedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "user": {
+          "$ref": "#/definitions/User"
+        },
+        "team": {
+          "$ref": "#/definitions/Team"
         }
       }
     },
@@ -360,6 +410,9 @@
     },
     "user": {
       "$ref": "#/definitions/User"
+    },
+    "teamMember": {
+      "$ref": "#/definitions/TeamMember"
     },
     "retroSession": {
       "$ref": "#/definitions/RetroSession"

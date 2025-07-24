@@ -8,11 +8,12 @@ import swaggerSpec from './core/swagger';
 import healthcheckRouter from './health.routes';
 
 import retrospectiveBoardRouter from '../slices/retrospective-board/retrospective-board.routes';
-import userManagementRouter from '../slices/user-management/user-management.routes';
+import userManagementRouter from '../slices/user-management/api/user-management.routes';
 import userSessionRouter from '../slices/user-session/api/user-session.routes';
 import userSessionHttpMiddleware from '../slices/user-session/api/user-session-http.middleware';
 import userSessionSocketMiddleware from '../slices/user-session/api/user-session-socket.middleware';
 import UserSessionCleanupScheduler from '../slices/user-session/business/user-session-cleanup.scheduler';
+import teamManagementRouter from '../slices/team-management/api/team-management.routes';
 
 // --- Server Initialization ---
 const app = express();
@@ -32,6 +33,7 @@ app.use(userSessionHttpMiddleware);
 app.use('/api/user-session', userSessionRouter);
 app.use('/api/users', userManagementRouter);
 app.use('/api/retrospective', retrospectiveBoardRouter);
+app.use('/api/teams', teamManagementRouter);
 
 // --- Socket.io Initialization ---
 // Create Socket.IO server, register middleware and connection handler

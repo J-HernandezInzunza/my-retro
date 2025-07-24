@@ -18,44 +18,94 @@ datasource db {
 
 // --- Core Models ---
 
-model Team {
-  id        String   @id @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// User roles for system-wide permissions
+enum UserRole {
+  ADMIN   // Can create teams and manage system
+  MEMBER  // Regular user
+}
 
-  users     User[]
+// Team member roles within a specific team
+enum TeamMemberRole {
+  OWNER       // Created the team, full control
+  FACILITATOR // Can manage retros and team settings
+  MEMBER      // Regular team member
+}
+
+model Team {
+  id         String   @id @default(cuid())
+  name       String
+  inviteCode String   @unique @default(cuid()) // Unique invite code for joining
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String   // User ID who created the team
+  updatedBy  String?  // User ID who last updated the team
+
+  // Multi-team relationships
+  members   TeamMember[]
   sessions  RetroSession[]
+  
+  // Relation for UserSession current team (opposite side)
+  currentUserSessions UserSession[] @relation("UserSessionCurrentTeam")
+  
+  // Relation to creator (but not a foreign key to avoid circular dependency issues)
+  @@index([inviteCode])
 }
 
 model UserSession {
-  id          String   @id
-  displayName String   @default("Anonymous User")
-  createdAt   DateTime @default(now())
-  lastActive  DateTime @default(now())
-  teamId      String?
+  id            String   @id
+  displayName   String   @default("Anonymous User")
+  createdAt     DateTime @default(now())
+  lastActive    DateTime @default(now())
+  currentTeamId String?  // Current active team (for multi-team support)
 
   // Optional relationship to User if/when they create a full account
-  user        User?    @relation(fields: [userId], references: [id])
-  userId      String?  @unique
+  user          User?    @relation(fields: [userId], references: [id])
+  userId        String?  @unique
+  
+  // Relation to current team (optional, for quick access)
+  currentTeam   Team?    @relation("UserSessionCurrentTeam", fields: [currentTeamId], references: [id])
+  
+  @@index([currentTeamId])
 }
 
 model User {
   id          String   @id @default(cuid())
-  sessionId   String?  // Making this optional since we're moving to UserSession model
-  displayName String?
+  email       String?  @unique // For permanent accounts
+  displayName String
+  role        UserRole @default(MEMBER) // System-wide role
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  team        Team?    @relation(fields: [teamId], references: [id])
-  teamId      String?
-
-  // Relation to user session
+  // Multi-team relationships (removed direct teamId)
+  teamMemberships TeamMember[]
+  
+  // Relation to user session (for upgrade path)
   userSession UserSession?
 
+  // Existing relations
   retroItems  RetroItem[]
   votes       Vote[]
   actionItems ActionItem[] @relation("AssignedActionItems")
+  
+  @@index([email])
+}
+
+// Junction (Mapping) table for many-to-many User-Team relationship with roles
+model TeamMember {
+  id     String         @id @default(cuid())
+  role   TeamMemberRole @default(MEMBER)
+  joinedAt DateTime     @default(now())
+  
+  // Relations
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId String
+  
+  @@unique([userId, teamId]) // A user can only have one role per team
+  @@index([userId])
+  @@index([teamId])
 }
 
 enum RetroSessionStatus {
