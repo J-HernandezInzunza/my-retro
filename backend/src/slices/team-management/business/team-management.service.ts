@@ -1,21 +1,22 @@
-import { PrismaClient, TeamMemberRole, TeamMember, UserRole } from '../../../generated/prisma';
+import { prisma } from '../../../app/core/prisma';
+import { TeamMemberRole, UserRole, TeamMember } from '../../../generated/prisma';
 import { InviteCodeUtil } from './invite-code.util';
-import { 
-  TeamDetailsResponse, 
-  TeamError, 
-  TeamCreateResult, 
-  TeamJoinResult, 
-  UserTeamMembership 
-} from '../types/team-management';
+import { TeamError, TeamCreateRequest, TeamJoinRequest, UserTeamMembership, TeamDetailsResponse } from '../types/team-management';
+import { UserRepository, TeamRepository } from '../../../shared/repositories';
 
-const prisma = new PrismaClient();
+export class TeamManagementService {
+  private userRepo: UserRepository;
+  private teamRepo: TeamRepository;
 
-export class TeamService {
+  constructor() {
+    this.userRepo = new UserRepository(prisma);
+    this.teamRepo = new TeamRepository(prisma);
+  }
   /**
    * Create a new team
    * Only ADMIN users can create teams
    */
-  async createTeam(userId: string, teamName: string): Promise<TeamCreateResult> {
+  async createTeam(userId: string, teamName: string): Promise<TeamCreateRequest> {
     // Verify user exists and is an admin
     const user = await prisma.user.findUnique({
       where: { id: userId }
@@ -52,56 +53,61 @@ export class TeamService {
 
   /**
    * Join a team using invite code
+   * Service handles business logic: validation, membership check, formatting
    */
-  async joinTeam(userId: string, inviteCode: string): Promise<TeamJoinResult> {
-    // Validate invite code format first
-    if (!InviteCodeUtil.isValidFormat(inviteCode)) {
+  async joinTeam(data: TeamJoinRequest): Promise<TeamDetailsResponse> {
+    // Business validation: invite code format
+    if (!InviteCodeUtil.isValidFormat(data.inviteCode)) {
       throw new TeamError('Invalid invite code format');
     }
 
-    // Verify user exists
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
+    // Business validation: verify user exists
+    const user = await this.userRepo.findUserById(data.userId);
     if (!user) {
       throw new TeamError('User not found');
     }
 
-    // Find team by invite code
-    const team = await prisma.team.findUnique({
-      where: { inviteCode },
-      include: {
-        members: {
-          where: { userId },
-          select: { id: true }
-        }
-      }
-    });
-
+    // Business validation: find team by invite code
+    const team = await this.teamRepo.findTeamByInviteCode(data.inviteCode);
     if (!team) {
       throw new TeamError('Invalid invite code');
     }
 
-    // Check if user is already a member
-    if (team.members.length > 0) {
+    // Business validation: check if user is already a member
+    const isAlreadyMember = await this.teamRepo.isUserTeamMember(data.userId, team.id);
+    if (isAlreadyMember) {
       throw new TeamError('User is already a member of this team');
     }
 
-    // Add user as team member
-    await prisma.teamMember.create({
-      data: {
-        userId: userId,
-        teamId: team.id,
-        role: TeamMemberRole.MEMBER
-      }
-    });
+    // Use repository for the data operation
+    try {
+      const teamWithMembers = await this.teamRepo.addUserToTeam(data.userId, team.id);
+      
+      // Format response for business layer
+      return teamWithMembers;
+    } catch (error) {
+      // Convert repository errors to business errors
+      throw new TeamError(error instanceof Error ? error.message : 'Failed to join team');
+    }
+  }
 
+  /**
+   * Format team data into business response format
+   */
+  private formatTeamDetailsResponse(teamData: any): TeamDetailsResponse {
     return {
-      id: team.id,
-      name: team.name,
-      inviteCode: team.inviteCode,
-      createdAt: team.createdAt
+      team: {
+        id: teamData.id,
+        name: teamData.name,
+        createdAt: teamData.createdAt,
+        updatedAt: teamData.updatedAt,
+        members: teamData.members.map((member: any) => ({
+          id: member.user.id,
+          displayName: member.user.displayName,
+          email: member.user.email,
+          role: member.role,
+        })),
+      }
     };
   }
 

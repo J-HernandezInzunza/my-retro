@@ -1,7 +1,8 @@
 // src/shared/services/socketService.ts
-import type { EventRequestType, EventResponseType, SocketUserEventMap } from '@shared/backend';
 import { io, Socket } from 'socket.io-client';
 import { reactive } from 'vue';
+
+import type { EventRequestType, EventResponseType, SocketEventMap } from '@shared/socket';
 
 // Define the URL where your Socket.IO server is running
 const SOCKET_URL = 'http://localhost:3001'; // Change this to match your backend URL
@@ -153,7 +154,7 @@ export class SocketService {
     }
   }
 
-  public emitAsync<E extends keyof SocketUserEventMap>(
+  public emitAsync<E extends keyof SocketEventMap>(
     eventName: E,
     data?: EventRequestType<E>,
   ): Promise<EventResponseType<E>> {

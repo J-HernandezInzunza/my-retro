@@ -1,7 +1,10 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { registerUserSessionHandlers } from '../../slices/user-session/api/user-session-socket.handlers';
+
 import { SESSION_EVENTS } from '../../slices/user-session/types/user-session';
+import { registerUserSessionHandlers } from '../../slices/user-session/api/user-session-socket.handlers';
+import { registerUserManagementHandlers } from '../../slices/user-management/api/user-management-socket.handlers';
+import { registerTeamManagementHandlers } from '../../slices/team-management/api/team-management-socket.handlers';
 
 // Track online users
 export interface OnlineUser {
@@ -46,6 +49,8 @@ export const handleSocketConnection = (io: Server, socket: Socket) => {
   
   // Register user session event handlers
   registerUserSessionHandlers(socket);
+  registerUserManagementHandlers(socket);
+  registerTeamManagementHandlers(socket);
 
   // Handle disconnection
   socket.on('disconnect', () => handleSocketDisconnection(socket));

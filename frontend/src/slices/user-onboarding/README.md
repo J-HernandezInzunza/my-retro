@@ -93,7 +93,6 @@ Success state component:
 
 ### Getters
 
-- `isIdentified` - Check if user has provided display name
 - `hasTeam` - Check if user has joined a team
 - `isOnboarded` - Check if user completed full onboarding
 - `displayName` - Get current display name

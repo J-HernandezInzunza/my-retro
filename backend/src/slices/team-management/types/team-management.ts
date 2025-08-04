@@ -1,19 +1,20 @@
 // Import generated Prisma types
 import { Team, User, TeamMember } from '../../../generated/prisma';
-import { TeamMemberRole } from '../../../generated/prisma';
 
 // Simple types for basic team operations
 export interface TeamCreateRequest {
+  userId: string;
   name: string;
 }
 
 export interface TeamJoinRequest {
+  userId: string;
   inviteCode: string;
 }
 
 // Service return types using generated Prisma types
-export type TeamCreateResult = Pick<Team, 'id' | 'name' | 'inviteCode' | 'createdAt'>;
-export type TeamJoinResult = Pick<Team, 'id' | 'name' | 'inviteCode' | 'createdAt'>;
+export type TeamCreateResponse = Pick<Team, 'id' | 'name' | 'inviteCode' | 'createdAt'>;
+
 export type UserTeamMembership = {
   team: Pick<Team, 'id' | 'name' | 'inviteCode' | 'createdAt' | 'updatedAt'>;
   role: TeamMember['role'];
@@ -22,10 +23,8 @@ export type UserTeamMembership = {
 
 // Extended types for team details information
 export type TeamDetailsResponse = {
-  team: Pick<Team, 'id' | 'name' | 'inviteCode' | 'createdAt' | 'updatedAt'>
-  & {
-    members: TeamMemberResponse[];
-  };
+  team: Pick<Team, 'id' | 'name' | 'createdAt' | 'updatedAt'>,
+  members: TeamMemberResponse[];
 };
 export type TeamMemberResponse = (Pick<User, 'id' | 'displayName' | 'email'> & Pick<TeamMember, 'role'>);
 
@@ -37,10 +36,11 @@ export class TeamError extends Error {
   }
 }
 
+type ValueOf<T> = T[keyof T];
 
-const test: TeamMemberResponse = {
-  id: '1',
-  displayName: 'Test',
-  email: 'test@test.com',
-  role: TeamMemberRole.MEMBER,
-}
+// Define socket event names matching the backend
+export const TEAM_MANAGEMENT_EVENTS = {
+  JOIN_TEAM: 'team:joinTeam',
+} as const;
+
+export type TEAM_MANAGEMENT_EVENTS = ValueOf<typeof TEAM_MANAGEMENT_EVENTS>;

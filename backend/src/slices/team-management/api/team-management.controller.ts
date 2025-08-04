@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { TeamService } from '../business/team.service';
+import { TeamManagementService } from '../business/team-management.service';
 import { TeamCreateRequest, TeamJoinRequest, TeamError } from '../types/team-management';
 
-const teamService = new TeamService();
+const teamService = new TeamManagementService();
 
 /**
  * Create a new team
@@ -56,7 +56,7 @@ export const joinTeam = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invite code is required' });
     }
 
-    const team = await teamService.joinTeam(userId, inviteCode);
+    const team = await teamService.joinTeam({ userId, inviteCode });
     
     res.status(200).json({ team });
 

@@ -2,36 +2,70 @@ import { defineStore } from 'pinia';
 
 import {
   SESSION_EVENTS,
+  USER_MANAGEMENT_EVENTS,
+  // UserRole,
   type UserSession,
   type UserSessionInitializeRequest,
   type UserSessionUpdateRequest,
+  type UserSessionUpgradeRequest,
+  type User,
 } from '@shared/backend';
 import { socketService } from '@/shared/socket-service';
 
-interface UserSessionState {
+interface UserState {
   userSession: {
     isLoading: boolean,
     data: UserSession | null,
     error: string | null,
   }
+  user: {
+    isLoading: boolean,
+    data: User | null,
+    error: string | null,
+  }
 }
 
 /**
- * Store for managing user session state
+ * Store for managing user and session state
  * Provides access to session data and operations
  */
 export const useUserSessionStore = defineStore('userSession', {
-  state: (): UserSessionState => ({
+  state: (): UserState => ({
     userSession: {
+      isLoading: false,
+      data: null,
+      error: null,
+    },
+    user: {
       isLoading: false,
       data: null,
       error: null,
     },
   }),
   actions: {
+    bindEvents() {
+      socketService.getSocket().on(SESSION_EVENTS.UPDATED, (session: UserSession) => {
+        console.log('Session updated: ', session);
+        this.handleSessionUpdated(session);
+      });
+    },
+    handleSessionUpdated(session: UserSession) {
+      const previousUserId = this.userSession.data?.userId;
+      this.userSession.data = session;
+      
+      // Reactive: If userId changed from null to a value, fetch user data
+      if (!previousUserId && session.userId) {
+        this.fetchLinkedUser(session.userId);
+      }
+      
+      // Reactive: If userId was removed, clear user data
+      if (previousUserId && !session.userId) {
+        this.user.data = null;
+      }
+    },
     async initializeUserSession(data: UserSessionInitializeRequest = {}): Promise<void> {
       try {
-        console.log('[UserSessionStore] Initializing');
+        
         this.userSession.isLoading = true;
         this.userSession.error = null;
         const response = await socketService.emitAsync<typeof SESSION_EVENTS.INITIALIZE>(SESSION_EVENTS.INITIALIZE, data);
@@ -42,7 +76,13 @@ export const useUserSessionStore = defineStore('userSession', {
         }
         // Save token in socket service
         socketService.setToken(response.token);
-        this.userSession.data = response.session; 
+        this.userSession.data = response.session;
+        
+        // Auto-fetch user data if session is already linked to a user
+        console.log('response.session.userId: ', response.session.userId);
+        if (response.session.userId) {
+          await this.fetchLinkedUser(response.session.userId);
+        } 
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch session';
         this.userSession.error = errorMessage;
@@ -52,36 +92,50 @@ export const useUserSessionStore = defineStore('userSession', {
     },
     
     /**
-     * Fetch the current user session from the server
+     * Fetch user data for a linked session (reactive to session.userId)
      */
-    async fetchSession(displayName?: string): Promise<void> {
-      // TODO:
+    async fetchLinkedUser(userId: string): Promise<void> {
+      try {
+        this.user.isLoading = true;
+        this.user.error = null;
+        
+        const response = await socketService.emitAsync<typeof USER_MANAGEMENT_EVENTS.GET_USER>(USER_MANAGEMENT_EVENTS.GET_USER, { userId });
+        console.log('response: ', response);
+        
+        if ('error' in response) {
+          throw new Error(response.error);
+        }
+        
+        this.user.data = response.user;
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user data';
+        this.user.error = errorMessage;
+        console.error('Failed to fetch linked user:', err);
+      } finally {
+        this.user.isLoading = false;
+      }
     },
     
     /**
-     * Update user's display name
+     * Upgrade user session to user account
      */
-    async updateDisplayName(data: UserSessionUpdateRequest): Promise<void> {
+    async upgradeSessionToUser(data: UserSessionUpgradeRequest): Promise<void> {
       try {
-        this.userSession.isLoading = true;
-        this.userSession.error = null;
-        const response = await socketService.emitAsync<typeof SESSION_EVENTS.UPDATE_NAME>(SESSION_EVENTS.UPDATE_NAME, data);
+        this.user.isLoading = true;
+        this.user.error = null;
+        const response = await socketService.emitAsync<typeof USER_MANAGEMENT_EVENTS.UPGRADE>(USER_MANAGEMENT_EVENTS.UPGRADE, data);
 
         if ('error' in response) {
-          this.userSession.error = response.error;
+          this.user.error = response.error;
           return;
         }
 
-        if (!this.userSession.data) {
-          return;
-        }
-
-        this.userSession.data.displayName = response.session.displayName;
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to update display name';
-        this.userSession.error = errorMessage;
+        this.user.data = response.user;
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to upgrade session';
+        this.user.error = errorMessage;
       } finally {
-        this.userSession.isLoading = false;
+        this.user.isLoading = false;
       }
     },
     
@@ -121,50 +175,65 @@ export const useUserSessionStore = defineStore('userSession', {
         data: null,
         error: null,
       };
+      this.user = {
+        isLoading: false,
+        data: null,
+        error: null,
+      };
     }
   },
   getters: {
-    /**
-     * Check if user has identified themselves (has display name)
-     */
-    isIdentified(state: UserSessionState): boolean {
-      const isAnonymous = state.userSession?.data?.displayName.includes('Anonymous User')
-      return Boolean(!isAnonymous);
+    // UI Helper: Current display name (User takes precedence over Session)
+    currentDisplayName: (state): string | null => {
+      return state.user.data?.displayName || state.userSession.data?.displayName || null;
     },
-    
-    /**
-     * Check if user has joined a team
-     */
-    hasTeam(state: UserSessionState): boolean {
-      return Boolean(state.userSession?.data?.teamId);
+
+    // UI Helper: Is user registered (has permanent account)
+    isRegistered: (state): boolean => {
+      return state.user.data !== null;
     },
-    
-    /**
-     * Check if user is fully onboarded (identified and joined team)
-     */
-    isOnboarded(state: UserSessionState): boolean {
-      return Boolean(state.userSession?.data?.displayName && state.userSession?.data?.teamId);
+
+    // UI Helper: Is user onboarded (has completed onboarding)
+    isOnboarded: (state): boolean => {
+      // return state.userSession.data?.isOnboarded || false;
+      return false;
     },
-    
-    /**
-     * Get user's display name or empty string
-     */
-    displayName(state: UserSessionState): string {
-      return state.userSession?.data?.displayName || '';
+
+    // UI Helper: Can create teams (requires ADMIN role)
+    canCreateTeams: (state): boolean => {
+      // return state.user.data?.role === UserRole.ADMIN;
+      return state.user.data?.role === 'ADMIN';
     },
-    
-    /**
-     * Get user's team ID or null
-     */
-    teamId(state: UserSessionState): string | null {
-      return state.userSession?.data?.teamId || null;
+
+    // UI Helper: Current user role (null if not registered)
+    currentRole: (state): string | null => {
+      return state.user.data?.role || null;
     },
-    
-    /**
-     * Get user's session ID or null
-     */
-    sessionId(state: UserSessionState): string | null {
-      return state.userSession?.data?.id || null;
+
+    // UI Helper: Session ID for socket operations
+    sessionId: (state): string | null => {
+      return state.userSession.data?.id || null;
     },
-  }
+
+    // UI Helper: Overall loading state
+    isLoading: (state): boolean => {
+      return state.userSession.isLoading || state.user.isLoading;
+    },
+
+    // UI Helper: Any errors
+    hasError: (state): boolean => {
+      return Boolean(state.userSession.error || state.user.error);
+    },
+
+    // UI Helper: Combined error message
+    errorMessage: (state): string | null => {
+      return state.user.error || state.userSession.error || null;
+    },
+
+    // Legacy getters (keeping for backward compatibility)
+    // Note: Removed teamId-based getters since UserSession doesn't have teamId
+    hasTeam(state: UserState): boolean {
+      return Boolean(state.user?.data); // Team membership will be handled by User entity
+    },
+  },
 });

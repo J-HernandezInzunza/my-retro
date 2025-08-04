@@ -1,6 +1,8 @@
 import { Socket } from 'socket.io';
+
 import { UserSessionService } from '../business/user-session.service';
-import { SocketUserEventMap, SESSION_EVENTS } from '../../../../../shared/backend';
+import { SESSION_EVENTS } from '../../../../../shared/backend';
+import { SocketEventMap } from '../../../../../shared/socket';
 
 const userSessionService = new UserSessionService();
 
@@ -17,8 +19,8 @@ export const registerUserSessionHandlers = (socket: Socket): void => {
   socket.on(
     SESSION_EVENTS.INITIALIZE,
     async (
-      data: SocketUserEventMap[typeof SESSION_EVENTS.INITIALIZE]['request'],
-      callback?: (response: SocketUserEventMap[typeof SESSION_EVENTS.INITIALIZE]['response']) => void
+      data: SocketEventMap[typeof SESSION_EVENTS.INITIALIZE]['request'],
+      callback?: (response: SocketEventMap[typeof SESSION_EVENTS.INITIALIZE]['response']) => void
     ) => {
     try {
       // Check if there's a token in the auth
@@ -43,9 +45,6 @@ export const registerUserSessionHandlers = (socket: Socket): void => {
       // Store token in socket auth for reconnections
       const newToken = result.session.id; // For now, token is the session ID
       socket.handshake.auth.token = newToken;
-
-      // Broadcast to any other connected clients for this user
-      socket.broadcast.emit(SESSION_EVENTS.UPDATED, { session: result.session });
       
       // Return session data and token to client
       callback?.({
@@ -64,8 +63,8 @@ export const registerUserSessionHandlers = (socket: Socket): void => {
   socket.on(
     SESSION_EVENTS.UPDATE_NAME,
     async (
-      data: SocketUserEventMap[typeof SESSION_EVENTS.UPDATE_NAME]['request'],
-      callback?: (response: SocketUserEventMap[typeof SESSION_EVENTS.UPDATE_NAME]['response']) => void
+      data: SocketEventMap[typeof SESSION_EVENTS.UPDATE_NAME]['request'],
+      callback?: (response: SocketEventMap[typeof SESSION_EVENTS.UPDATE_NAME]['response']) => void
     ) => {
     try {
       // Get session ID from socket data
@@ -89,7 +88,7 @@ export const registerUserSessionHandlers = (socket: Socket): void => {
       // Update session in socket data
       socket.data.session = updatedSession;
 
-      // Broadcast to any other connected clients for this user
+      // Broadcast to any other connected clients for this user session
       socket.broadcast.emit(SESSION_EVENTS.UPDATED, { session: updatedSession });
       
       // Return updated session to client
@@ -105,8 +104,8 @@ export const registerUserSessionHandlers = (socket: Socket): void => {
    * Join team via WebSocket
    */
   socket.on(SESSION_EVENTS.JOIN_TEAM, async (
-    data: SocketUserEventMap[typeof SESSION_EVENTS.JOIN_TEAM]['request'],
-    callback?: (response: SocketUserEventMap[typeof SESSION_EVENTS.JOIN_TEAM]['response']) => void
+    data: SocketEventMap[typeof SESSION_EVENTS.JOIN_TEAM]['request'],
+    callback?: (response: SocketEventMap[typeof SESSION_EVENTS.JOIN_TEAM]['response']) => void
   ) => {
     try {
       // Get session ID from socket data
@@ -129,9 +128,6 @@ export const registerUserSessionHandlers = (socket: Socket): void => {
 
       // Update session in socket data
       socket.data.session = updatedSession;
-
-      // Broadcast to any other connected clients for this user
-      socket.broadcast.emit(SESSION_EVENTS.UPDATED, { session: updatedSession });
       
       // Return updated session to client
       callback?.({ session: updatedSession });
@@ -146,8 +142,8 @@ export const registerUserSessionHandlers = (socket: Socket): void => {
    * Clear session via WebSocket
    */
   socket.on(SESSION_EVENTS.CLEAR, async (
-    _data: SocketUserEventMap[typeof SESSION_EVENTS.CLEAR]['request'],
-    callback?: (response: SocketUserEventMap[typeof SESSION_EVENTS.CLEAR]['response']) => void
+    _data: SocketEventMap[typeof SESSION_EVENTS.CLEAR]['request'],
+    callback?: (response: SocketEventMap[typeof SESSION_EVENTS.CLEAR]['response']) => void
   ) => {
     try {
       // Get session ID from socket data

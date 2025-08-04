@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { UserManagementService } from '../business/user.service';
+import { UserManagementService } from '../business/user-management.service';
 import { UserRole } from '../../../generated/prisma';
 
 const userService = new UserManagementService();
@@ -22,7 +22,10 @@ export const upgradeSession = async (req: Request, res: Response) => {
     // Default to MEMBER role if not specified
     const userRole = role && Object.values(UserRole).includes(role) ? role : UserRole.MEMBER;
 
-    const user = await userService.upgradeSessionToUser(sessionId, email, userRole);
+    const user = await userService.upgradeSessionToUser(sessionId, {
+      email,
+      role: userRole
+    });
     
     res.status(200).json({
       success: true,

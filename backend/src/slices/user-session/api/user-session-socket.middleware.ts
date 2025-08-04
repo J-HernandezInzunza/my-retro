@@ -39,7 +39,6 @@ const userSessionSocketMiddleware = async (socket: Socket, next: (err?: Extended
     socket.data.session = {
       id: session.id,
       displayName: session.displayName,
-      teamId: session.teamId,
       userId: session.userId,
       createdAt: session.createdAt,
       lastActive: session.lastActive

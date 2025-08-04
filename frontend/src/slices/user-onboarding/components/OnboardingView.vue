@@ -6,7 +6,6 @@ import { useUserSessionStore } from '../stores/userSessionStore';
 import UserIdentificationForm from './UserIdentificationForm.vue';
 import TeamJoinForm from './TeamJoinForm.vue';
 import OnboardingCompletion from './OnboardingCompletion.vue';
-import router from '@/app/router';
 
 defineOptions({
   name: 'OnboardingView'
@@ -27,7 +26,7 @@ enum OnboardingStep {
 }
 
 const userSessionStore = useUserSessionStore();
-const { userSession, isIdentified, isOnboarded } = storeToRefs(userSessionStore);
+const { userSession, isRegistered, isOnboarded } = storeToRefs(userSessionStore);
 const currentStep = ref<OnboardingStep>(OnboardingStep.Loading);
 
 // Computed properties to control component visibility based on current step
@@ -47,15 +46,21 @@ const initializeSession = async () => {
   try {
     // Let the store handle loading and error state
     await userSessionStore.initializeUserSession();
-    console.log('userSession.value: ', userSession.value);
 
     // Determine next step based on session state
-    if (!isIdentified.value) {
+    if (!isRegistered.value) {
       handleBeginOnboarding();
-    } else if (!isOnboarded.value) {
+      return;
+    }
+
+    if (isRegistered.value && !isOnboarded.value) {
       handleIdentificationComplete();
-    } else {
+      return;
+    }
+
+    if (isRegistered.value && isOnboarded.value) {
       handleTeamJoinComplete();
+      return;
     }
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : 'Failed to initialize session';
@@ -92,7 +97,7 @@ onMounted(async() => {
 <template>
   <div class="onboarding-view q-pa-md">
     <div class="text-center q-mb-lg">
-      <h1 class="text-h4 q-mt-none q-mb-xs">My Retro</h1>
+      <h1 class="text-h4 q-mt-none q-mb-xs">Welcome To My Retro</h1>
       <p class="text-subtitle1 q-ma-none">Get started with your retrospective session</p>
     </div>
 
@@ -137,7 +142,7 @@ onMounted(async() => {
 
 <style scoped>
 .onboarding-view {
-  max-width: 600px;
+  max-width: 750px;
   margin: 0 auto;
   min-height: 400px;
 }

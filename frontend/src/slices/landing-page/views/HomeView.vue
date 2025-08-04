@@ -33,24 +33,18 @@
 
 <script setup lang="ts">
 import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 import AboutCard from '../components/AboutCard.vue'
 
 const $q = useQuasar()
+const router = useRouter()
 
 function joinSession() {
-  $q.notify({
-    color: 'positive',
-    message: 'Join Session feature coming soon!',
-    icon: 'group_add',
-  })
+  router.push('/onboarding')
 }
 
 function createSession() {
-  $q.notify({
-    color: 'secondary',
-    message: 'Create Session feature coming soon!',
-    icon: 'add_circle',
-  })
+  router.push('/onboarding')
 }
 </script>
 
