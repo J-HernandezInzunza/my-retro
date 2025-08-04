@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { storeToRefs } from 'pinia';
+import { useRouter } from 'vue-router';
 
-import { useUserSessionStore } from '../stores/userSessionStore';
+import { useOnboardingState, OnboardingStep } from '@/shared/composables/useOnboardingState';
 import UserIdentificationForm from './UserIdentificationForm.vue';
 import TeamJoinForm from './TeamJoinForm.vue';
 import OnboardingCompletion from './OnboardingCompletion.vue';
@@ -17,16 +17,15 @@ const emit = defineEmits<{
   (e: 'error', message: string): void;
 }>();
 
-// Step tracking for onboarding flow
-enum OnboardingStep {
-  Loading = 'loading',
-  Identification = 'identification',
-  TeamJoin = 'team-join',
-  Completed = 'completed'
-}
-
-const userSessionStore = useUserSessionStore();
-const { userSession, isRegistered, isOnboarded } = storeToRefs(userSessionStore);
+const router = useRouter();
+const {
+  userSession,
+  isRegistered,
+  hasTeam,
+  isFullyOnboarded,
+  initializeOnboarding,
+  fetchUserTeams,
+} = useOnboardingState();
 const currentStep = ref<OnboardingStep>(OnboardingStep.Loading);
 
 // Computed properties to control component visibility based on current step
@@ -44,8 +43,8 @@ const showError = (message: string) => {
 // Initialize session and determine initial step
 const initializeSession = async () => {
   try {
-    // Let the store handle loading and error state
-    await userSessionStore.initializeUserSession();
+    // Let the composable handle loading and error state
+    await initializeOnboarding();
 
     // Determine next step based on session state
     if (!isRegistered.value) {
@@ -53,12 +52,12 @@ const initializeSession = async () => {
       return;
     }
 
-    if (isRegistered.value && !isOnboarded.value) {
+    if (isRegistered.value && !hasTeam.value) {
       handleIdentificationComplete();
       return;
     }
 
-    if (isRegistered.value && isOnboarded.value) {
+    if (isFullyOnboarded.value) {
       handleTeamJoinComplete();
       return;
     }
@@ -74,8 +73,24 @@ const handleBeginOnboarding = () => {
 };
 
 // Handle completion of identification step
-const handleIdentificationComplete = () => {
-  currentStep.value = OnboardingStep.TeamJoin;
+const handleIdentificationComplete = async () => {
+  try {
+    // Fetch user's teams to check if they already have a team
+    await fetchUserTeams();
+    
+    // Check if user already has a team after fetching
+    if (hasTeam.value) {
+      // User already has a team, skip to completion
+      handleTeamJoinComplete();
+    } else {
+      // User needs to join or create a team
+      currentStep.value = OnboardingStep.TeamJoin;
+    }
+  } catch (error) {
+    console.error('Failed to fetch user teams:', error);
+    // On error, proceed to team join step anyway
+    currentStep.value = OnboardingStep.TeamJoin;
+  }
 };
 
 // Handle completion of team join step
@@ -85,12 +100,14 @@ const handleTeamJoinComplete = () => {
 
 // Handle completion of onboarding
 const handleOnboardingCompleted = () => {
-  // TODO: Push route to a retro session selection view filtered by team
+  // Navigate to team dashboard after successful onboarding
+  router.push({ name: 'team-dashboard' });
+  emit('completed');
 };
 
 // Initialize on component mount
 onMounted(async() => {
-  await initializeSession()
+  await initializeSession();
 });
 </script>
 

@@ -44,4 +44,35 @@ export const registerTeamManagementHandlers = (socket: Socket): void => {
       }
     }
   );
+
+  socket.on(
+    TEAM_MANAGEMENT_EVENTS.GET_USER_TEAMS,
+    async (
+      data: SocketEventMap[typeof TEAM_MANAGEMENT_EVENTS.GET_USER_TEAMS]['request'],
+      callback?: (response: SocketEventMap[typeof TEAM_MANAGEMENT_EVENTS.GET_USER_TEAMS]['response']) => void
+    ) => {
+      try {
+        // Get session ID from socket data
+        const sessionId = socket.data.session?.id;
+        
+        if (!sessionId) {
+          return callback?.({ error: 'No active session' });
+        }
+
+        if (!data.userId) {
+          return callback?.({ error: 'User ID is required' });
+        }
+
+        // Get user's teams
+        console.log('get user teams for user: ', data.userId);
+        const userTeams = await teamManagementService.getUserTeams(data.userId);
+        
+        // Return teams to client
+        callback?.(userTeams);
+      } catch (error) {
+        console.error('Get user teams error:', error);
+        callback?.({ error: 'Failed to fetch user teams' });
+      }
+    }
+  );
 };

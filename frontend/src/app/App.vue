@@ -3,6 +3,7 @@
 </template>
 
 <script setup lang="ts">
+// Main App component - uses router-view to display current route
 import { useUserSessionStore } from '@/slices/user-onboarding/stores/userSessionStore';
 import { useTeamStore } from '@/slices/user-onboarding/stores/teamStore';
 

@@ -118,23 +118,32 @@ export const useTeamStore = defineStore('team', {
     /**
      * Fetch user's teams
      */
-    async fetchUserTeams(): Promise<void> {
+    async fetchUserTeams(userId: string): Promise<void> {
       try {
         this.userTeams.isLoading = true;
         this.userTeams.error = null;
         
-        // TODO: Implement fetching user teams
-        // const response = await socketService.emitAsync<typeof TEAM_EVENTS.GET_USER_TEAMS>(TEAM_EVENTS.GET_USER_TEAMS, {});
+        const response = await socketService.emitAsync<typeof TEAM_MANAGEMENT_EVENTS.GET_USER_TEAMS>(TEAM_MANAGEMENT_EVENTS.GET_USER_TEAMS, { userId });
+        console.log('fetchUserTeams response: ', response);
         
-        // if ('error' in response) {
-        //   this.userTeams.error = response.error;
-        //   return;
-        // }
+        if ('error' in response) {
+          this.userTeams.error = response.error;
+          return;
+        }
         
-        // this.userTeams.data = response.teams;
+        // Convert UserTeamMembership[] to Team[] for compatibility with existing UI
+        const teams: Team[] = response.map(membership => membership.team);
+        this.userTeams.data = teams;
         
-        // Placeholder for now
-        throw new Error('Fetching user teams not implemented yet');
+        // If user has teams, set the first one as current team
+        // TODO: In the future, we might want to let user choose or remember their last active team
+        if (response.length > 0) {
+          // Set the first team's details as current team
+          this.currentTeam.data = {
+            team: response[0].team,
+            members: [] // We'll fetch members separately if needed
+          };
+        }
         
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch teams';
@@ -197,7 +206,7 @@ export const useTeamStore = defineStore('team', {
   getters: {
     // UI Helper: Current team name
     currentTeamName: (state): string | null => {
-      return state.currentTeam.data?.name || null;
+      return state.currentTeam.data?.team.name || null;
     },
 
     // UI Helper: Is user in a team
@@ -207,7 +216,7 @@ export const useTeamStore = defineStore('team', {
 
     // UI Helper: Current team ID
     currentTeamId: (state): string | null => {
-      return state.currentTeam.data?.id || null;
+      return state.currentTeam.data?.team.id || null;
     },
 
     // UI Helper: Team member count

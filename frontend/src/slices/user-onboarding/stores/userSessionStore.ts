@@ -139,32 +139,6 @@ export const useUserSessionStore = defineStore('userSession', {
       }
     },
     
-    /**
-     * Join a team via WebSocket
-     */
-    async joinTeam(data: UserSessionUpdateRequest): Promise<void> {
-      try {
-        this.userSession.isLoading = true;
-        this.userSession.error = null;
-        const response = await socketService.emitAsync<typeof SESSION_EVENTS.JOIN_TEAM>(SESSION_EVENTS.JOIN_TEAM, data);
-
-        if ('error' in response) {
-          this.userSession.error = response.error;
-          return;
-        }
-
-        if (!this.userSession.data) {
-          return;
-        }
-
-        this.userSession.data.teamId = response.session.teamId;
-      } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to join team';
-        this.userSession.error = errorMessage;
-      } finally {
-        this.userSession.isLoading = false;
-      }
-    },
 
     /**
      * Reset store state (without clearing backend session)
@@ -191,12 +165,6 @@ export const useUserSessionStore = defineStore('userSession', {
     // UI Helper: Is user registered (has permanent account)
     isRegistered: (state): boolean => {
       return state.user.data !== null;
-    },
-
-    // UI Helper: Is user onboarded (has completed onboarding)
-    isOnboarded: (state): boolean => {
-      // return state.userSession.data?.isOnboarded || false;
-      return false;
     },
 
     // UI Helper: Can create teams (requires ADMIN role)

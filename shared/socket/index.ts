@@ -15,6 +15,8 @@ import {
   TEAM_MANAGEMENT_EVENTS,
   type TeamJoinRequest,
   type TeamDetailsResponse,
+  type GetUserTeamsRequest,
+  type GetUserTeamsResponse,
 } from '../../backend/src/slices/team-management/types/team-management';
 
 export interface SocketEventMap {
@@ -49,6 +51,10 @@ export interface SocketEventMap {
   [TEAM_MANAGEMENT_EVENTS.JOIN_TEAM]: {
     request: TeamJoinRequest;
     response: TeamDetailsResponse | { error: string };
+  };
+  [TEAM_MANAGEMENT_EVENTS.GET_USER_TEAMS]: {
+    request: GetUserTeamsRequest;
+    response: GetUserTeamsResponse | { error: string };
   };
 }
 

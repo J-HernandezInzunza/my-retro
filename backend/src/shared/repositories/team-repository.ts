@@ -29,7 +29,6 @@ export class TeamRepository {
                 select: {
                   id: true,
                   displayName: true,
-                  email: true
                 }
               }
             },
@@ -54,8 +53,8 @@ export class TeamRepository {
         members: teamWithMembers.members.map(member => ({
           id: member.user.id,
           displayName: member.user.displayName,
-          email: member.user.email,
           role: member.role,
+          joinedAt: member.joinedAt,
         })),
       };
     });

@@ -92,26 +92,6 @@ export class TeamManagementService {
   }
 
   /**
-   * Format team data into business response format
-   */
-  private formatTeamDetailsResponse(teamData: any): TeamDetailsResponse {
-    return {
-      team: {
-        id: teamData.id,
-        name: teamData.name,
-        createdAt: teamData.createdAt,
-        updatedAt: teamData.updatedAt,
-        members: teamData.members.map((member: any) => ({
-          id: member.user.id,
-          displayName: member.user.displayName,
-          email: member.user.email,
-          role: member.role,
-        })),
-      }
-    };
-  }
-
-  /**
    * Get all teams a user is a member of
    */
   async getUserTeams(userId: string): Promise<UserTeamMembership[]> {
@@ -195,16 +175,15 @@ export class TeamManagementService {
       team: {
         id: team.id,
         name: team.name,
-        inviteCode: team.inviteCode,
         createdAt: team.createdAt,
         updatedAt: team.updatedAt,
-        members: team.members.map(member => ({
+      },
+      members: team.members.map(member => ({
           id: member.user.id,
           displayName: member.user.displayName,
-          email: member.user.email,
           role: member.role,
+          joinedAt: member.joinedAt,
         })),
-      },
     };
   }
 }

@@ -94,7 +94,6 @@ Success state component:
 ### Getters
 
 - `hasTeam` - Check if user has joined a team
-- `isOnboarded` - Check if user completed full onboarding
 - `displayName` - Get current display name
 - `teamId` - Get current team ID
 - `sessionId` - Get current session ID
