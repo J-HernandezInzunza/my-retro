@@ -4,7 +4,7 @@
       <!-- Team Header -->
       <div class="row items-center q-mb-lg">
         <div class="col">
-          <h4 class="q-my-none">{{ currentTeamName || 'Team Dashboard' }}</h4>
+          <h4 class="q-my-none">'Team Dashboard'</h4>
           <p class="text-grey-6 q-mb-none">
             Welcome to your team workspace
           </p>
@@ -28,7 +28,7 @@
             <q-card-section>
               <div class="text-h6 q-mb-sm">Team Members</div>
               <div class="text-body2 text-grey-6">
-                {{ memberCount }} {{ memberCount === 1 ? 'member' : 'members' }}
+                0
               </div>
             </q-card-section>
             <q-card-section class="q-pt-none">
@@ -114,17 +114,9 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { useTeamStore } from '@/slices/user-onboarding/stores/teamStore';
-import { useRouter } from 'vue-router';
-
 defineOptions({
   name: 'TeamDashboardView'
 });
-
-const router = useRouter();
-const teamStore = useTeamStore();
-const { currentTeamName, memberCount } = storeToRefs(teamStore);
 
 // Action handlers
 const createRetro = () => {
