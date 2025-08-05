@@ -14,6 +14,7 @@ import userSessionHttpMiddleware from '../slices/user-session/api/user-session-h
 import userSessionSocketMiddleware from '../slices/user-session/api/user-session-socket.middleware';
 import UserSessionCleanupScheduler from '../slices/user-session/business/user-session-cleanup.scheduler';
 import teamManagementRouter from '../slices/team-management/api/team-management.routes';
+import retroSessionRouter from '../slices/retrospective-session/api/retro-session.routes';
 
 // --- Server Initialization ---
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api/user-session', userSessionRouter);
 app.use('/api/users', userManagementRouter);
 app.use('/api/retrospective', retrospectiveBoardRouter);
 app.use('/api/teams', teamManagementRouter);
+app.use('/api/retro-sessions', retroSessionRouter);
 
 // --- Socket.io Initialization ---
 // Create Socket.IO server, register middleware and connection handler
